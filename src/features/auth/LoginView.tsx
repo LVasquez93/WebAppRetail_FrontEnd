@@ -60,7 +60,7 @@ export const LoginView: React.FC = () => {
           <p className="text-xs text-[#C88D4B] font-semibold uppercase tracking-wider mt-1">
             Sistema de Cotizaciones
           </p>
-          <h4 className="text-2xl font-black tracking-wide">V 1.0 </h4>
+          <h4 className="font-black tracking-wide">V 1.0 </h4>
         </div>
 
         {/* Formulario */}
