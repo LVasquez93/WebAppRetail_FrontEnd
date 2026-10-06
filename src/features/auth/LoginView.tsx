@@ -156,7 +156,7 @@ export const LoginView: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin('CVALENCIA', 'gerente123')}
+                onClick={() => handleQuickLogin('LVASQUEZ', 'gerente123')}
                 className="p-2 text-left bg-indigo-50/70 hover:bg-indigo-100/70 border border-indigo-200 rounded-lg transition-colors cursor-pointer"
               >
                 <div className="text-[11px] font-bold text-indigo-900">👔 Jefe Operaciones</div>
@@ -165,20 +165,11 @@ export const LoginView: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin('VENTASSR001', 'ventas123')}
+                onClick={() => handleQuickLogin('VENTASSV001', 'ventas123')}
                 className="p-2 text-left bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
               >
                 <div className="text-[11px] font-bold text-emerald-900">💼 Ventas01</div>
                 <div className="text-[10px] text-emerald-700">VENTASSV001 / ventas123</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('VENTASOCC01', 'ventas123')}
-                className="p-2 text-left bg-amber-50/70 hover:bg-amber-100/70 border border-amber-200 rounded-lg transition-colors cursor-pointer"
-              >
-                <div className="text-[11px] font-bold text-amber-900">💼 Ventas02</div>
-                <div className="text-[10px] text-amber-700">VENTASOCC01 / ventas123</div>
               </button>
             </div>
           </div>
