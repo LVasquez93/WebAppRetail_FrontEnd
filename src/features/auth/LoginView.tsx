@@ -61,6 +61,7 @@ export const LoginView: React.FC = () => {
             Sistema de Cotizaciones
           </p>
           <h4 className="font-black tracking-wide">V 1.0 </h4>
+          <h4 className="font-black tracking-wide">Derechos reservados para el creador </h4>
         </div>
 
         {/* Formulario */}
