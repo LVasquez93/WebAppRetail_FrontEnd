@@ -56,7 +56,10 @@ src/
 │   ├── auth/
 │   │   └── ProtectedRoute.tsx         # Guardián de rutas por rol (requireAdmin, requireAdminOrGerente)
 │   └── layout/
-│       └── Navbar.tsx                 # Barra superior con enlaces dinámicos según rol
+│       ├── AppLayout.tsx              # Shell principal ERP: integra Sidebar, Header y ProfileModal
+│       ├── Sidebar.tsx                # Barra lateral vertical ERP (colapsable, drawer en móviles, categorizada)
+│       ├── Header.tsx                 # Barra superior limpia con selectores de contexto (Empresa y Sucursal)
+│       └── ProfileModal.tsx           # Modal de autogestión de perfil y credenciales del usuario en sesión
 │
 └── features/                          # Módulos de negocio desacoplados
     ├── dashboard/

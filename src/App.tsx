@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Navbar } from './components/layout/Navbar';
+import { AppLayout } from './components/layout/AppLayout';
 import { CotizacionForm } from './features/cotizaciones/components/CotizacionForm';
 import { CotizacionesList } from './features/cotizaciones/components/CotizacionesList';
 import { DashboardView } from './features/dashboard/DashboardView';
@@ -16,11 +16,9 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <SucursalProvider>
-          <div className="min-h-screen bg-gray-100 flex flex-col">
-            <Navbar />
-            <main className="flex-1 py-6 px-2 sm:py-8 sm:px-4">
-              <Routes>
-                <Route path="/login" element={<LoginView />} />
+          <AppLayout>
+            <Routes>
+              <Route path="/login" element={<LoginView />} />
                 <Route
                   path="/"
                   element={
@@ -69,10 +67,9 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </main>
-          </div>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AppLayout>
         </SucursalProvider>
       </AuthProvider>
     </BrowserRouter>
