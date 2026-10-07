@@ -152,27 +152,6 @@ export const SucursalesView: React.FC = () => {
     );
   }
 
-  if (sucursales.length === 0) {
-    return (
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className="bg-white rounded-xl shadow-md p-8 border-l-4 border-amber-500 space-y-4">
-          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <span>⚠️</span> No se pudieron obtener las sucursales
-          </h2>
-          <p className="text-sm text-gray-600">
-            No se recibió información de las sucursales desde el backend. Asegúrate de que el servidor Spring Boot esté ejecutándose en el puerto 8080.
-          </p>
-          <button
-            type="button"
-            onClick={() => recargarSucursales()}
-            className="bg-[#1F3D3D] hover:bg-[#2a5252] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-2 shadow-sm"
-          >
-            <span>🔄</span> Reintentar cargar sucursales
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -231,8 +210,56 @@ export const SucursalesView: React.FC = () => {
         </div>
       )}
 
-      {/* Pestañas de Sucursales */}
-      <div className="flex gap-2 border-b border-gray-200 overflow-x-auto pb-1">
+      {/* Vista cuando no hay sucursales registradas */}
+      {sucursales.length === 0 ? (
+        <div className="bg-white rounded-2xl shadow-md p-10 text-center border border-teal-100 space-y-4 animate-fadeIn">
+          <div className="w-16 h-16 bg-teal-50 text-[#1F3D3D] rounded-full flex items-center justify-center text-3xl mx-auto shadow-inner">
+            🏢
+          </div>
+          <h2 className="text-xl font-bold text-gray-800">
+            Aún no hay sucursales registradas para tu empresa
+          </h2>
+          <p className="text-sm text-gray-600 max-w-md mx-auto">
+            Para comenzar a emitir cotizaciones y personalizar membretes fiscales, registra la primera sucursal (Casa Matriz) de tu empresa.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setNuevaSucursal({
+                  codigo: 'SUC_01',
+                  nombre: (user?.empresaNombre || 'Casa Matriz') + ' (Principal)',
+                  razonSocial: user?.empresaNombre || '',
+                  nombreComercial: user?.empresaNombre || '',
+                  prefijoCotizacion: 'COT1',
+                  direccion: '',
+                  telefono: '',
+                  correo: '',
+                  formaPagoPredeterminada: 'Contado contra entrega / Transferencia Bancaria',
+                  notaPredeterminada: '** IMPORTANTE ** Precios sujetos a inventario.',
+                  nombreFirmante: user?.nombreCompleto || 'Gerente General',
+                  cargoFirmante: user?.cargo || 'Gerente General',
+                  activo: true,
+                });
+                setModalNuevaSucursal(true);
+              }}
+              className="bg-[#1F3D3D] hover:bg-[#2a5252] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md flex items-center gap-2 cursor-pointer transition-all"
+            >
+              <span>➕</span> Registrar Primera Sucursal
+            </button>
+            <button
+              type="button"
+              onClick={() => recargarSucursales()}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors cursor-pointer"
+            >
+              🔄 Sincronizar con el servidor
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Pestañas de Sucursales */}
+          <div className="flex gap-2 border-b border-gray-200 overflow-x-auto pb-1">
         {sucursales.map(s => {
           const isSelected = s.id === branchSeleccionada?.id;
           return (
@@ -574,6 +601,8 @@ export const SucursalesView: React.FC = () => {
             </button>
           </div>
         </form>
+      )}
+      </>
       )}
 
       {/* Modal para Crear Nueva Sucursal */}

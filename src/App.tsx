@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import { CotizacionForm } from './features/cotizaciones/components/CotizacionForm';
 import { CotizacionesList } from './features/cotizaciones/components/CotizacionesList';
+import { DashboardView } from './features/dashboard/DashboardView';
 import { SucursalesView } from './features/sucursales/SucursalesView';
 import { CatalogosManagerView } from './features/catalogos/CatalogosManagerView';
 import { EmpresasManagerView } from './features/empresas/EmpresasManagerView';
@@ -22,6 +23,14 @@ function App() {
                 <Route path="/login" element={<LoginView />} />
                 <Route
                   path="/"
+                  element={
+                    <ProtectedRoute>
+                      <DashboardView />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/cotizaciones/nueva"
                   element={
                     <ProtectedRoute>
                       <CotizacionForm />

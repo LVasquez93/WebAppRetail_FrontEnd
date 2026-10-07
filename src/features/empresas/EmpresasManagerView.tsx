@@ -21,6 +21,7 @@ export const EmpresasManagerView: React.FC = () => {
     direccion: '',
     logoBase64: '',
     activo: true,
+    gerenteId: undefined,
     gerenteUsername: '',
     gerentePassword: '',
     gerenteNombreCompleto: '',
@@ -64,6 +65,11 @@ export const EmpresasManagerView: React.FC = () => {
       direccion: emp.direccion || '',
       logoBase64: emp.logoBase64 || '',
       activo: emp.activo,
+      gerenteId: emp.gerenteId,
+      gerenteUsername: emp.gerenteUsername || '',
+      gerenteNombreCompleto: emp.gerenteNombreCompleto || '',
+      gerenteCorreo: emp.gerenteCorreo || '',
+      gerentePassword: '',
     });
     setModalAbierto(true);
   };
@@ -163,6 +169,7 @@ export const EmpresasManagerView: React.FC = () => {
                   <th className="px-4 py-3">Razón Social</th>
                   <th className="px-4 py-3">NIT</th>
                   <th className="px-4 py-3">Contacto</th>
+                  <th className="px-4 py-3">Gerente Asignado</th>
                   <th className="px-4 py-3 text-center">Estado</th>
                   <th className="px-4 py-3 text-center">Acciones</th>
                 </tr>
@@ -177,6 +184,28 @@ export const EmpresasManagerView: React.FC = () => {
                     <td className="px-4 py-3 text-xs">
                       <div>📞 {emp.telefono || '—'}</div>
                       <div>✉️ {emp.correo || '—'}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {emp.gerenteUsername ? (
+                        <div className="flex items-start gap-2">
+                          <span className="text-sm bg-indigo-50 border border-indigo-200 text-indigo-700 w-7 h-7 rounded-full flex items-center justify-center font-bold">
+                            👤
+                          </span>
+                          <div>
+                            <div className="font-semibold text-gray-900 text-xs flex items-center gap-1.5">
+                              <span>{emp.gerenteNombreCompleto || emp.gerenteUsername}</span>
+                              <span className="bg-indigo-50 text-indigo-700 font-mono text-[10px] px-1.5 py-0.5 rounded border border-indigo-200">
+                                @{emp.gerenteUsername}
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-gray-500">{emp.gerenteCorreo || 'Sin correo registrado'}</div>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="inline-block text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-medium">
+                          ⚠️ Sin gerente asignado
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span
@@ -311,59 +340,61 @@ export const EmpresasManagerView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Sección 2: Aprovisionamiento de Cuenta Gerente (Solo al crear) */}
-              {!empresaEditando && (
-                <div className="space-y-3 pt-2">
-                  <h3 className="text-sm font-bold text-[#C88D4B] uppercase tracking-wide border-b pb-1">
-                    👤 Cuenta Inicial de Gerente (Dueño / Administrador de la Empresa)
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    Opcional: Si completas estos campos, se creará automáticamente un usuario con rol GERENTE vinculado a esta empresa.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-amber-50/50 p-3 rounded-xl border border-amber-200">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Usuario (Login)</label>
-                      <input
-                        type="text"
-                        value={form.gerenteUsername || ''}
-                        onChange={(e) => setForm({ ...form, gerenteUsername: e.target.value })}
-                        placeholder="ej: gerenteretail"
-                        className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Contraseña</label>
-                      <input
-                        type="password"
-                        value={form.gerentePassword || ''}
-                        onChange={(e) => setForm({ ...form, gerentePassword: e.target.value })}
-                        placeholder="Contraseña segura"
-                        className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Nombre Completo</label>
-                      <input
-                        type="text"
-                        value={form.gerenteNombreCompleto || ''}
-                        onChange={(e) => setForm({ ...form, gerenteNombreCompleto: e.target.value })}
-                        placeholder="Lic. Roberto Morales"
-                        className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">Correo Electrónico</label>
-                      <input
-                        type="email"
-                        value={form.gerenteCorreo || ''}
-                        onChange={(e) => setForm({ ...form, gerenteCorreo: e.target.value })}
-                        placeholder="gerente@empresa.com"
-                        className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
-                      />
-                    </div>
+              {/* Sección 2: Cuenta de Gerente (Crear o Editar) */}
+              <div className="space-y-3 pt-2">
+                <h3 className="text-sm font-bold text-[#C88D4B] uppercase tracking-wide border-b pb-1">
+                  👤 {empresaEditando ? 'Cuenta de Gerente de la Empresa' : 'Cuenta Inicial de Gerente (Dueño / Administrador)'}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {empresaEditando
+                    ? 'Gestiona el usuario con rol GERENTE asignado a esta empresa. Deja la contraseña vacía si no deseas cambiarla.'
+                    : 'Opcional: Si completas estos campos, se creará automáticamente un usuario con rol GERENTE vinculado a esta empresa.'}
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-amber-50/50 p-3 rounded-xl border border-amber-200">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Usuario (Login)</label>
+                    <input
+                      type="text"
+                      value={form.gerenteUsername || ''}
+                      onChange={(e) => setForm({ ...form, gerenteUsername: e.target.value })}
+                      placeholder="ej: gerenteretail"
+                      className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      {empresaEditando ? 'Nueva Contraseña (opcional)' : 'Contraseña'}
+                    </label>
+                    <input
+                      type="password"
+                      value={form.gerentePassword || ''}
+                      onChange={(e) => setForm({ ...form, gerentePassword: e.target.value })}
+                      placeholder={empresaEditando ? 'Dejar en blanco para conservar actual' : 'Contraseña segura'}
+                      className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Nombre Completo</label>
+                    <input
+                      type="text"
+                      value={form.gerenteNombreCompleto || ''}
+                      onChange={(e) => setForm({ ...form, gerenteNombreCompleto: e.target.value })}
+                      placeholder="Lic. Roberto Morales"
+                      className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Correo Electrónico</label>
+                    <input
+                      type="email"
+                      value={form.gerenteCorreo || ''}
+                      onChange={(e) => setForm({ ...form, gerenteCorreo: e.target.value })}
+                      placeholder="gerente@empresa.com"
+                      className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                    />
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Botones de acción */}
               <div className="flex justify-end gap-3 pt-4 border-t">

@@ -9,6 +9,11 @@ export interface Empresa {
   logoBase64?: string;
   activo: boolean;
   fechaCreacion?: string;
+  // Información del Gerente asignado
+  gerenteId?: number;
+  gerenteUsername?: string;
+  gerenteNombreCompleto?: string;
+  gerenteCorreo?: string;
 }
 
 export interface EmpresaFormData {
@@ -20,7 +25,8 @@ export interface EmpresaFormData {
   direccion?: string;
   logoBase64?: string;
   activo?: boolean;
-  // Campos opcionales para aprovisionamiento directo del Gerente al crear la empresa
+  // Campos para aprovisionar o editar el Gerente de la empresa
+  gerenteId?: number;
   gerenteUsername?: string;
   gerentePassword?: string;
   gerenteNombreCompleto?: string;

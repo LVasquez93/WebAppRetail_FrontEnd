@@ -158,6 +158,13 @@ export const Navbar = () => {
             <Link
               to="/"
               className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm transition-colors ${isActive('/')}`}
+              title="Panel Principal / Dashboard"
+            >
+              🏠 Inicio
+            </Link>
+            <Link
+              to="/cotizaciones/nueva"
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm transition-colors ${isActive('/cotizaciones/nueva')}`}
             >
               Nueva Cotización
             </Link>

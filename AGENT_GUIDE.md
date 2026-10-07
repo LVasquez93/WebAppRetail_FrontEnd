@@ -59,11 +59,14 @@ src/
 │       └── Navbar.tsx                 # Barra superior con enlaces dinámicos según rol
 │
 └── features/                          # Módulos de negocio desacoplados
+    ├── dashboard/
+    │   └── DashboardView.tsx          # Panel principal interactivo con tarjetas de acceso adaptadas por RBAC
+    │
     ├── auth/
     │   └── LoginView.tsx              # Vista de autenticación y login con credenciales
     │
     ├── empresas/                      # Módulo Multi-Empresa (Exclusivo SuperAdmin)
-    │   ├── EmpresasManagerView.tsx    # Listado, creación, edición, alternancia de estado y aprovisionamiento de Gerente
+    │   ├── EmpresasManagerView.tsx    # Listado, creación, edición, alternancia de estado y gestión de Gerentes
     │   └── types/empresas.types.ts
     │
     ├── sucursales/
@@ -117,8 +120,9 @@ src/
 
 | Módulo / Elemento UI | Ruta | `ROLE_ADMIN` | `ROLE_GERENTE` | `ROLE_VENTAS` |
 | :--- | :--- | :---: | :---: | :---: |
+| **Dashboard Principal** | `/` | **Acceso Total** | **Acceso Total** | **Acceso Total** |
 | **Módulo Empresas** | `/empresas` | **Acceso Total** | **Bloqueado** (403) | **Bloqueado** (403) |
-| **Nueva Cotización** | `/` | Permitido | Permitido | Permitido (en su sucursal) |
+| **Nueva Cotización** | `/cotizaciones/nueva` | Permitido | Permitido | Permitido (en su sucursal) |
 | **Historial de Cotizaciones** | `/cotizaciones` | Permitido | Permitido | Permitido |
 | **Selector de Sucursal (Navbar)** | N/A | Visible (Todas) | Visible (Su Empresa) | **Oculto** (Fijo) |
 | **Módulo Catálogos** | `/catalogos` | Acceso Global | Filtrado por su Empresa | **Bloqueado** (Redirige a `/`) |
