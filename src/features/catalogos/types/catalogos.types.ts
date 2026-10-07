@@ -19,6 +19,7 @@ export interface Usuario {
   cargo?: string;
   rol: string;
   sucursalId?: number;
+  empresaId?: number;
   activo?: boolean;
 }
 
@@ -51,5 +52,6 @@ export interface Sucursal {
   cargoFirmante?: string;
   formaPagoPredeterminada?: string;
   notaPredeterminada?: string;
+  empresaId?: number;
   activo: boolean;
 }

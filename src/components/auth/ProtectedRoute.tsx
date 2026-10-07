@@ -5,13 +5,15 @@ import { useAuth } from '../../context/AuthContext';
 interface ProtectedRouteProps {
   children: ReactNode;
   requireAdminOrGerente?: boolean;
+  requireAdmin?: boolean;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   requireAdminOrGerente = false,
+  requireAdmin = false,
 }) => {
-  const { isAuthenticated, cargandoAuth, isAdminOrGerente } = useAuth();
+  const { isAuthenticated, cargandoAuth, isAdminOrGerente, isAdmin } = useAuth();
   const location = useLocation();
 
   if (cargandoAuth) {
@@ -25,6 +27,26 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (requireAdmin && !isAdmin) {
+    return (
+      <div className="max-w-xl mx-auto my-12 bg-white rounded-2xl shadow-xl border border-red-200 p-8 text-center animate-fadeIn">
+        <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+          ⛔
+        </div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Acceso Exclusivo de Administrador</h2>
+        <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+          Esta sección requiere permisos exclusivos de <strong className="text-red-700">Super Administrador</strong> del sistema.
+        </p>
+        <button
+          onClick={() => window.history.back()}
+          className="px-5 py-2.5 bg-[#1F3D3D] text-white rounded-xl text-sm font-semibold hover:bg-[#2a5252] transition-colors cursor-pointer shadow-md"
+        >
+          ← Regresar al Cotizador
+        </button>
+      </div>
+    );
   }
 
   if (requireAdminOrGerente && !isAdminOrGerente) {

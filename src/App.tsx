@@ -4,6 +4,7 @@ import { CotizacionForm } from './features/cotizaciones/components/CotizacionFor
 import { CotizacionesList } from './features/cotizaciones/components/CotizacionesList';
 import { SucursalesView } from './features/sucursales/SucursalesView';
 import { CatalogosManagerView } from './features/catalogos/CatalogosManagerView';
+import { EmpresasManagerView } from './features/empresas/EmpresasManagerView';
 import { LoginView } from './features/auth/LoginView';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
@@ -32,6 +33,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <CotizacionesList />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/empresas"
+                  element={
+                    <ProtectedRoute requireAdmin={true}>
+                      <EmpresasManagerView />
                     </ProtectedRoute>
                   }
                 />

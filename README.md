@@ -1,5 +1,8 @@
 # Cotizador Frontend (React + Vite + TypeScript)
 
+> 📖 **Guía Arquitectónica y Documentación para Agentes IA**:  
+> Para una visión técnica profunda de componentes, contextos globales, RBAC en interfaz y directrices para nuevos módulos, consulta [AGENT_GUIDE.md](AGENT_GUIDE.md).
+
 Aplicación Web empresarial para la gestión, emisión y visualización de cotizaciones comerciales multi-sucursal. Desarrollada con React 18, Vite 5.4, TypeScript, Tailwind CSS v4, React Hook Form, Axios y React Router DOM 6.
 
 ---

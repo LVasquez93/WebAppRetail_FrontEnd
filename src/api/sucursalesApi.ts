@@ -2,8 +2,10 @@ import axiosClient from './axiosClient';
 import { Sucursal } from '../features/catalogos/types/catalogos.types';
 
 export const sucursalesApi = {
-  listar: async (): Promise<Sucursal[]> => {
-    const response = await axiosClient.get<Sucursal[]>('/sucursales');
+  listar: async (empresaId?: number): Promise<Sucursal[]> => {
+    const response = await axiosClient.get<Sucursal[]>('/sucursales', {
+      params: empresaId ? { empresaId } : undefined,
+    });
     return response.data;
   },
 
@@ -20,5 +22,9 @@ export const sucursalesApi = {
   actualizar: async (id: number, data: Partial<Sucursal>): Promise<Sucursal> => {
     const response = await axiosClient.put<Sucursal>(`/sucursales/${id}`, data);
     return response.data;
+  },
+
+  eliminar: async (id: number): Promise<void> => {
+    await axiosClient.delete(`/sucursales/${id}`);
   },
 };

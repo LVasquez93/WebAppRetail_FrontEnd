@@ -1,14 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useSucursal } from '../../context/SucursalContext';
+import { useAuth } from '../../context/AuthContext';
 import { sucursalesApi } from '../../api/sucursalesApi';
 import { Sucursal } from '../catalogos/types/catalogos.types';
 
 export const SucursalesView: React.FC = () => {
+  const { user } = useAuth();
   const { sucursales, sucursalActiva, setSucursalActiva, recargarSucursales, cargandoSucursales } = useSucursal();
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(sucursalActiva?.id || null);
   const [formData, setFormData] = useState<Partial<Sucursal>>({});
   const [guardando, setGuardando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
+
+  // Estado para modal de nueva sucursal
+  const [modalNuevaSucursal, setModalNuevaSucursal] = useState(false);
+  const [nuevaSucursal, setNuevaSucursal] = useState<Partial<Sucursal>>({
+    codigo: '',
+    nombre: '',
+    razonSocial: '',
+    nombreComercial: '',
+    direccion: '',
+    telefono: '',
+    correo: '',
+    prefijoCotizacion: '',
+    nombreFirmante: '',
+    cargoFirmante: '',
+    formaPagoPredeterminada: 'Contado contra entrega / Transferencia Bancaria',
+    notaPredeterminada: '** IMPORTANTE ** Precios sujetos a inventario.',
+    activo: true,
+  });
 
   // Determinar la sucursal activa garantizando que nunca sea nula si existen sucursales
   const activeBranchId = selectedBranchId ?? sucursalActiva?.id ?? sucursales[0]?.id ?? null;
@@ -20,6 +40,59 @@ export const SucursalesView: React.FC = () => {
       setFormData({ ...branchSeleccionada });
     }
   }, [branchSeleccionada?.id]);
+
+  const handleCrearSucursal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setGuardando(true);
+      const empresaId = user?.empresaId || branchSeleccionada?.empresaId || 1;
+      const creada = await sucursalesApi.crear({
+        ...nuevaSucursal,
+        empresaId,
+        activo: true,
+      });
+      await recargarSucursales();
+      setSelectedBranchId(creada.id);
+      setModalNuevaSucursal(false);
+      setMensajeExito(`¡Sucursal "${creada.nombre}" creada con éxito!`);
+      setTimeout(() => setMensajeExito(null), 4000);
+    } catch (error: any) {
+      console.error('Error al crear sucursal:', error);
+      alert('Error al crear la nueva sucursal.');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const handleEliminarSucursal = async () => {
+    if (!selectedBranchId) return;
+    if (sucursales.length <= 1) {
+      alert('No puedes eliminar la única sucursal registrada de la empresa.');
+      return;
+    }
+    const confirmacion = window.confirm(
+      `¿Estás seguro de que deseas eliminar la sucursal "${branchSeleccionada?.nombre}"? Esta acción desactivará la sucursal del sistema.`
+    );
+    if (!confirmacion) return;
+
+    try {
+      setGuardando(true);
+      await sucursalesApi.eliminar(selectedBranchId);
+      await recargarSucursales();
+      const restantes = sucursales.filter(s => s.id !== selectedBranchId);
+      if (restantes.length > 0) {
+        setSelectedBranchId(restantes[0].id);
+        setSucursalActiva(restantes[0]);
+      }
+      setMensajeExito('Sucursal eliminada correctamente.');
+      setTimeout(() => setMensajeExito(null), 4000);
+    } catch (error) {
+      console.error('Error al eliminar sucursal:', error);
+      alert('Ocurrió un error al eliminar la sucursal.');
+    } finally {
+      setGuardando(false);
+    }
+  };
 
   const handleInputChange = (field: keyof Sucursal, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -114,12 +187,38 @@ export const SucursalesView: React.FC = () => {
               Personaliza los datos fiscales, correlativos, membretes y firmas digitales de cada sucursal de la empresa.
             </p>
           </div>
-          {sucursalActiva && (
-            <div className="bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-lg text-xs text-teal-800">
-              <span className="font-semibold">Sucursal en uso actual:</span>{' '}
-              <span className="font-bold text-[#1F3D3D]">{sucursalActiva.nombre}</span>
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {sucursalActiva && (
+              <div className="bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-lg text-xs text-teal-800">
+                <span className="font-semibold">Sucursal activa:</span>{' '}
+                <span className="font-bold text-[#1F3D3D]">{sucursalActiva.nombre}</span>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setNuevaSucursal({
+                  codigo: `SUC_0${sucursales.length + 1}`,
+                  nombre: '',
+                  razonSocial: branchSeleccionada?.razonSocial || '',
+                  nombreComercial: branchSeleccionada?.nombreComercial || '',
+                  prefijoCotizacion: `COT${sucursales.length + 1}`,
+                  direccion: '',
+                  telefono: '',
+                  correo: '',
+                  formaPagoPredeterminada: 'Contado contra entrega / Transferencia Bancaria',
+                  notaPredeterminada: '** IMPORTANTE ** Precios sujetos a inventario.',
+                  nombreFirmante: user?.nombreCompleto || 'Ing. Erick Ramírez',
+                  cargoFirmante: user?.cargo || 'Gerente de Sucursal',
+                  activo: true,
+                });
+                setModalNuevaSucursal(true);
+              }}
+              className="bg-[#1F3D3D] hover:bg-[#2a5252] text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer transition-colors"
+            >
+              <span>➕</span> Nueva Sucursal
+            </button>
+          </div>
         </div>
       </div>
 
@@ -443,8 +542,20 @@ export const SucursalesView: React.FC = () => {
             </div>
           </div>
 
-          {/* Botón de Acción Principal */}
-          <div className="flex justify-end gap-3 pt-2">
+          {/* Botones de Acción Principal */}
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-2">
+            {sucursales.length > 1 ? (
+              <button
+                type="button"
+                onClick={handleEliminarSucursal}
+                disabled={guardando}
+                className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-semibold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
+                title="Desactivar/Eliminar esta sucursal"
+              >
+                <span>🗑️</span> Eliminar Sucursal
+              </button>
+            ) : <div />}
+
             <button
               type="submit"
               disabled={guardando}
@@ -463,6 +574,149 @@ export const SucursalesView: React.FC = () => {
             </button>
           </div>
         </form>
+      )}
+
+      {/* Modal para Crear Nueva Sucursal */}
+      {modalNuevaSucursal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4">
+            <div className="flex items-center justify-between border-b pb-3">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <span>➕</span> Registrar Nueva Sucursal
+              </h2>
+              <button
+                onClick={() => setModalNuevaSucursal(false)}
+                className="text-gray-400 hover:text-gray-600 font-bold text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCrearSucursal} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Código Interno *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={nuevaSucursal.codigo || ''}
+                    onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, codigo: e.target.value })}
+                    placeholder="SUC_03"
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Prefijo Cotización *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={nuevaSucursal.prefijoCotizacion || ''}
+                    onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, prefijoCotizacion: e.target.value })}
+                    placeholder="COT3"
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Nombre Descriptivo *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={nuevaSucursal.nombre || ''}
+                    onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, nombre: e.target.value })}
+                    placeholder="Ej: Retail Sucursal 3 (Santa Tecla)"
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Razón Social *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={nuevaSucursal.razonSocial || ''}
+                    onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, razonSocial: e.target.value })}
+                    placeholder="Ej: RETAIL SERVICES EL SALVADOR S.A. DE C.V."
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Teléfono</label>
+                  <input
+                    type="text"
+                    value={nuevaSucursal.telefono || ''}
+                    onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, telefono: e.target.value })}
+                    placeholder="2200-0000"
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Correo</label>
+                  <input
+                    type="email"
+                    value={nuevaSucursal.correo || ''}
+                    onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, correo: e.target.value })}
+                    placeholder="sucursal3@retail.com"
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Dirección</label>
+                  <input
+                    type="text"
+                    value={nuevaSucursal.direccion || ''}
+                    onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, direccion: e.target.value })}
+                    placeholder="Dirección física de la sucursal"
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Nombre Firmante</label>
+                  <input
+                    type="text"
+                    value={nuevaSucursal.nombreFirmante || ''}
+                    onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, nombreFirmante: e.target.value })}
+                    placeholder="ING. ERICK RAMIREZ"
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Cargo Firmante</label>
+                  <input
+                    type="text"
+                    value={nuevaSucursal.cargoFirmante || ''}
+                    onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, cargoFirmante: e.target.value })}
+                    placeholder="GERENTE DE SUCURSAL"
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setModalNuevaSucursal(false)}
+                  className="px-4 py-2 border rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={guardando}
+                  className="px-5 py-2 bg-[#1F3D3D] hover:bg-[#2a5252] text-white rounded-xl text-sm font-bold shadow-md cursor-pointer disabled:opacity-50"
+                >
+                  {guardando ? 'Guardando...' : 'Crear Sucursal'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

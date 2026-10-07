@@ -13,6 +13,8 @@ export interface AuthUser {
   sucursalId?: number;
   sucursalCodigo?: string;
   sucursalNombre?: string;
+  empresaId?: number;
+  empresaNombre?: string;
 }
 
 export interface AuthResponse extends AuthUser {

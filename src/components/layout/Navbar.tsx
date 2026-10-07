@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 export const Navbar = () => {
   const location = useLocation();
   const { sucursales, sucursalActiva, setSucursalActiva, cargandoSucursales, recargarSucursales } = useSucursal();
-  const { user, isAuthenticated, isAdminOrGerente, logout } = useAuth();
+  const { user, isAuthenticated, isAdminOrGerente, isAdmin, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -168,6 +168,17 @@ export const Navbar = () => {
               Historial
             </Link>
 
+            {/* Rutas exclusivas para ADMIN */}
+            {isAdmin && (
+              <Link
+                to="/empresas"
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm transition-colors ${isActive('/empresas')}`}
+                title="Gestión de Empresas (Multi-Tenant)"
+              >
+                🏛️ Empresas
+              </Link>
+            )}
+
             {/* Rutas exclusivas para ADMIN y GERENTE */}
             {isAdminOrGerente && (
               <>
@@ -195,7 +206,10 @@ export const Navbar = () => {
                   <span>{user?.nombreCompleto || user?.username}</span>
                   {getRoleBadge(user?.rol)}
                 </div>
-                <div className="text-[10px] text-teal-300/80">{user?.cargo || user?.username}</div>
+                <div className="text-[10px] text-teal-300/80">
+                  {user?.empresaNombre ? `${user.empresaNombre} • ` : ''}
+                  {user?.cargo || user?.username}
+                </div>
               </div>
 
               <button

@@ -14,8 +14,10 @@ import { UsuariosTable } from './components/UsuariosTable';
 import { CatalogoFormModal } from './components/CatalogoFormModal';
 import { BatchImportModal } from './components/BatchImportModal';
 import { ConfirmDeleteModal } from './components/ConfirmDeleteModal';
+import { useAuth } from '../../context/AuthContext';
 
 export const CatalogosManagerView: React.FC = () => {
+  const { user, isAdmin } = useAuth();
   const { sucursales, sucursalActiva } = useSucursal();
 
   // Pestaña activa ('clientes' | 'equipos' | 'usuarios')
@@ -78,7 +80,8 @@ export const CatalogosManagerView: React.FC = () => {
         const data = await equiposApi.listarOBuscar(q, sId);
         setEquipos(data);
       } else {
-        const data = await usuariosApi.listarOBuscar(q);
+        const empId = !isAdmin ? user?.empresaId : undefined;
+        const data = await usuariosApi.listarOBuscar(q, empId);
         setUsuarios(data);
       }
     } catch (error) {
@@ -131,6 +134,7 @@ export const CatalogosManagerView: React.FC = () => {
         cargo: '',
         rol: 'ROLE_VENTAS',
         sucursalId: sucursalFiltro !== 'TODAS' ? sucursalFiltro : (sucursalActiva?.id || 1),
+        empresaId: user?.empresaId,
         activo: true
       });
     }
@@ -166,11 +170,15 @@ export const CatalogosManagerView: React.FC = () => {
           mostrarToast(`Equipo "${formData.descripcion}" registrado con éxito`);
         }
       } else {
+        const userPayload = {
+          ...formData,
+          empresaId: formData.empresaId || user?.empresaId,
+        };
         if (registroEdicion) {
-          await usuariosApi.actualizar(registroEdicion.id, formData);
+          await usuariosApi.actualizar(registroEdicion.id, userPayload);
           mostrarToast(`Usuario "${formData.username}" actualizado con éxito`);
         } else {
-          await usuariosApi.crear(formData);
+          await usuariosApi.crear(userPayload);
           mostrarToast(`Usuario "${formData.username}" creado con éxito`);
         }
       }

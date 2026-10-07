@@ -14,7 +14,7 @@ interface SucursalContextType {
 const SucursalContext = createContext<SucursalContextType | undefined>(undefined);
 
 export const SucursalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user, isAdminOrGerente } = useAuth();
+  const { user, isAdminOrGerente, isAdmin } = useAuth();
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [sucursalActiva, setSucursalActivaState] = useState<Sucursal | null>(null);
   const [cargandoSucursales, setCargandoSucursales] = useState<boolean>(true);
@@ -22,7 +22,7 @@ export const SucursalProvider: React.FC<{ children: ReactNode }> = ({ children }
   const cargarSucursales = async () => {
     try {
       setCargandoSucursales(true);
-      const data = await sucursalesApi.listar();
+      const data = await sucursalesApi.listar(!isAdmin ? user?.empresaId : undefined);
       setSucursales(data);
 
       if (data && data.length > 0) {
@@ -60,7 +60,7 @@ export const SucursalProvider: React.FC<{ children: ReactNode }> = ({ children }
   // Re-evaluar sucursal cuando cambie el usuario o sus roles
   useEffect(() => {
     cargarSucursales();
-  }, [user?.id, user?.rol, user?.sucursalId]);
+  }, [user?.id, user?.rol, user?.sucursalId, user?.empresaId]);
 
   const setSucursalActiva = (sucursal: Sucursal) => {
     // Si no es admin ni gerente, no tiene permiso de cambiar de sucursal
