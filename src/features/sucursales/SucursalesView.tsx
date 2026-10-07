@@ -5,8 +5,8 @@ import { sucursalesApi } from '../../api/sucursalesApi';
 import { Sucursal } from '../catalogos/types/catalogos.types';
 
 export const SucursalesView: React.FC = () => {
-  const { user } = useAuth();
-  const { sucursales, sucursalActiva, setSucursalActiva, recargarSucursales, cargandoSucursales } = useSucursal();
+  const { user, isAdmin } = useAuth();
+  const { sucursales, sucursalActiva, setSucursalActiva, recargarSucursales, cargandoSucursales, empresaSeleccionada } = useSucursal();
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(sucursalActiva?.id || null);
   const [formData, setFormData] = useState<Partial<Sucursal>>({});
   const [guardando, setGuardando] = useState(false);
@@ -45,7 +45,7 @@ export const SucursalesView: React.FC = () => {
     e.preventDefault();
     try {
       setGuardando(true);
-      const empresaId = user?.empresaId || branchSeleccionada?.empresaId || 1;
+      const empresaId = user?.empresaId || empresaSeleccionada?.id || branchSeleccionada?.empresaId || 1;
       const creada = await sucursalesApi.crear({
         ...nuevaSucursal,
         empresaId,
@@ -159,9 +159,20 @@ export const SucursalesView: React.FC = () => {
       <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-[#1F3D3D]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              <span>🏢</span> Configuración de Sucursales y Membretes
-            </h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <span>🏢</span> Configuración de Sucursales y Membretes
+              </h1>
+              {isAdmin ? (
+                <span className="bg-purple-100 text-purple-900 border border-purple-200 text-xs px-2.5 py-1 rounded-full font-bold ml-1">
+                  🏛️ {empresaSeleccionada?.nombre || 'Empresa'}
+                </span>
+              ) : user?.empresaNombre ? (
+                <span className="bg-teal-100 text-teal-900 border border-teal-200 text-xs px-2.5 py-1 rounded-full font-bold ml-1">
+                  🏢 {user.empresaNombre}
+                </span>
+              ) : null}
+            </div>
             <p className="text-sm text-gray-600 mt-1">
               Personaliza los datos fiscales, correlativos, membretes y firmas digitales de cada sucursal de la empresa.
             </p>
@@ -179,8 +190,8 @@ export const SucursalesView: React.FC = () => {
                 setNuevaSucursal({
                   codigo: `SUC_0${sucursales.length + 1}`,
                   nombre: '',
-                  razonSocial: branchSeleccionada?.razonSocial || '',
-                  nombreComercial: branchSeleccionada?.nombreComercial || '',
+                  razonSocial: branchSeleccionada?.razonSocial || empresaSeleccionada?.razonSocial || '',
+                  nombreComercial: branchSeleccionada?.nombreComercial || empresaSeleccionada?.nombre || '',
                   prefijoCotizacion: `COT${sucursales.length + 1}`,
                   direccion: '',
                   telefono: '',

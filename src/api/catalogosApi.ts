@@ -2,10 +2,11 @@ import axiosClient from './axiosClient';
 import { Cliente, Usuario, Equipo } from '../features/catalogos/types/catalogos.types';
 
 export const clientesApi = {
-  listarOBuscar: async (query?: string, sucursalId?: number): Promise<Cliente[]> => {
+  listarOBuscar: async (query?: string, sucursalId?: number, empresaId?: number): Promise<Cliente[]> => {
     const params: Record<string, any> = {};
     if (query) params.q = query;
     if (sucursalId) params.sucursalId = sucursalId;
+    if (empresaId) params.empresaId = empresaId;
     const response = await axiosClient.get<Cliente[]>('/clientes', { params });
     return response.data;
   },
@@ -70,10 +71,11 @@ export const usuariosApi = {
 };
 
 export const equiposApi = {
-  listarOBuscar: async (query?: string, sucursalId?: number): Promise<Equipo[]> => {
+  listarOBuscar: async (query?: string, sucursalId?: number, empresaId?: number): Promise<Equipo[]> => {
     const params: Record<string, any> = {};
     if (query) params.q = query;
     if (sucursalId) params.sucursalId = sucursalId;
+    if (empresaId) params.empresaId = empresaId;
     const response = await axiosClient.get<Equipo[]>('/equipos', { params });
     return response.data;
   },

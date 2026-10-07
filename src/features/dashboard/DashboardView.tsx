@@ -5,10 +5,10 @@ import { useSucursal } from '../../context/SucursalContext';
 
 export const DashboardView: React.FC = () => {
   const { user, isAdmin, isGerente, isAdminOrGerente } = useAuth();
-  const { sucursalActiva } = useSucursal();
+  const { sucursalActiva, empresas, empresaSeleccionada, setEmpresaSeleccionada } = useSucursal();
 
   const getRoleName = () => {
-    if (isAdmin) return 'Super Administrador';
+    if (isAdmin) return 'Super Administrador SaaS';
     if (isGerente) return 'Gerente de Empresa';
     return 'Ejecutivo de Ventas';
   };
@@ -29,35 +29,64 @@ export const DashboardView: React.FC = () => {
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2">
+            <div className="inline-flex items-center gap-2 flex-wrap">
               <span className={`text-xs font-bold px-3 py-1 rounded-full border shadow-sm ${getRoleBadgeStyle()}`}>
                 🛡️ {getRoleName()}
               </span>
-              {user?.empresaNombre && (
+              {isAdmin ? (
+                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-purple-900/40 text-purple-200 border border-purple-400/30">
+                  🌐 Plataforma Multi-Tenant Global
+                </span>
+              ) : user?.empresaNombre ? (
                 <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white/10 text-teal-100 border border-white/15">
                   🏢 {user.empresaNombre}
                 </span>
-              )}
+              ) : null}
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
               ¡Hola, {user?.nombreCompleto || user?.username}! 👋
             </h1>
             <p className="text-sm text-teal-100/90 max-w-2xl leading-relaxed">
-              Bienvenido al sistema corporativo de cotizaciones. Selecciona un módulo para gestionar propuestas comerciales, sucursales y catálogos.
+              {isAdmin
+                ? `Como Super Administrador tienes visibilidad y control sobre todas las organizaciones clientes registradas en la plataforma. Actualmente inspeccionando: ${empresaSeleccionada?.nombre || 'Ninguna empresa seleccionada'}.`
+                : 'Bienvenido al sistema corporativo de cotizaciones. Selecciona un módulo para gestionar propuestas comerciales, sucursales y catálogos.'}
             </p>
           </div>
 
-          {/* Tarjeta de Sucursal Activa */}
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/15 min-w-[260px] space-y-2 self-start md:self-auto shadow-inner">
-            <div className="text-[11px] uppercase tracking-wider text-teal-200 font-bold flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              Sucursal Activa
-            </div>
-            <div className="font-bold text-white text-base">
-              {sucursalActiva?.nombre || 'Sin sucursal asignada'}
-            </div>
-            <div className="text-xs text-teal-200/80 truncate">
-              {sucursalActiva?.razonSocial || 'Configura los datos fiscales en Sucursales'}
+          {/* Tarjeta de Contexto Activo (Empresa y Sucursal) */}
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/15 min-w-[280px] space-y-3 self-start md:self-auto shadow-inner">
+            {isAdmin && empresas.length > 0 && (
+              <div className="space-y-1 pb-2 border-b border-white/10">
+                <div className="text-[10px] uppercase tracking-wider text-purple-200 font-bold flex items-center justify-between">
+                  <span>🏛️ Empresa Seleccionada</span>
+                  <Link to="/empresas" className="text-purple-300 hover:text-white underline text-[10px]">Gestionar</Link>
+                </div>
+                <select
+                  value={empresaSeleccionada?.id || ''}
+                  onChange={(e) => {
+                    const emp = empresas.find(em => em.id === Number(e.target.value)) || null;
+                    setEmpresaSeleccionada(emp);
+                  }}
+                  className="w-full bg-[#173030] text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-teal-400/30 focus:outline-none focus:ring-1 focus:ring-teal-300 cursor-pointer"
+                >
+                  {empresas.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.nombre}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-teal-200 font-bold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                Sucursal Activa
+              </div>
+              <div className="font-bold text-white text-base truncate">
+                {sucursalActiva?.nombre || 'Sin sucursal asignada'}
+              </div>
+              <div className="text-xs text-teal-200/80 truncate">
+                {sucursalActiva?.razonSocial || 'Configura los datos fiscales en Sucursales'}
+              </div>
             </div>
           </div>
         </div>

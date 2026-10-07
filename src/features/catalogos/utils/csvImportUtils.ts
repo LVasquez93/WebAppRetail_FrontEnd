@@ -26,7 +26,7 @@ function parsearLineasCsv(texto: string): string[][] {
   });
 }
 
-export function parsearCsvClientes(texto: string, defaultSucursalId?: number): Partial<Cliente>[] {
+export function parsearCsvClientes(texto: string, defaultSucursalId?: number, defaultEmpresaId?: number): Partial<Cliente>[] {
   const filas = parsearLineasCsv(texto);
   if (filas.length === 0) return [];
 
@@ -58,12 +58,13 @@ export function parsearCsvClientes(texto: string, defaultSucursalId?: number): P
         correo: correo || undefined,
         direccion: direccion || undefined,
         sucursalId: sucursalId || undefined,
+        empresaId: defaultEmpresaId || undefined,
         activo: true
       };
     });
 }
 
-export function parsearCsvEquipos(texto: string, defaultSucursalId?: number): Partial<Equipo>[] {
+export function parsearCsvEquipos(texto: string, defaultSucursalId?: number, defaultEmpresaId?: number): Partial<Equipo>[] {
   const filas = parsearLineasCsv(texto);
   if (filas.length === 0) return [];
 
@@ -95,12 +96,13 @@ export function parsearCsvEquipos(texto: string, defaultSucursalId?: number): Pa
         tiempoEntregaPredeterminado,
         categoria,
         sucursalId: sucursalId || undefined,
+        empresaId: defaultEmpresaId || undefined,
         activo: true
       };
     });
 }
 
-export function parsearCsvUsuarios(texto: string): Partial<Usuario>[] {
+export function parsearCsvUsuarios(texto: string, defaultEmpresaId?: number): Partial<Usuario>[] {
   const filas = parsearLineasCsv(texto);
   if (filas.length === 0) return [];
 
@@ -126,6 +128,7 @@ export function parsearCsvUsuarios(texto: string): Partial<Usuario>[] {
         correo: correo || undefined,
         cargo: cargo || undefined,
         rol,
+        empresaId: defaultEmpresaId || undefined,
         activo: true
       };
     });

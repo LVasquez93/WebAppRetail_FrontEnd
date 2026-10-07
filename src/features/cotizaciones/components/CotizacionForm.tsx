@@ -75,7 +75,9 @@ export const CotizacionForm = () => {
   // Carga inicial y reactiva de datos maestros según la sucursal activa seleccionada
   useEffect(() => {
     const sucursalId = sucursalActiva?.id;
-    clientesApi.listarOBuscar(undefined, sucursalId).then(data => {
+    const targetEmpresaId = sucursalActiva?.empresaId || user?.empresaId;
+
+    clientesApi.listarOBuscar(undefined, sucursalId, targetEmpresaId).then(data => {
       setClientes(data);
       setClientesSugeridos(data);
     }).catch(console.error);
@@ -85,12 +87,12 @@ export const CotizacionForm = () => {
     }
 
     if (isAdminOrGerente) {
-      usuariosApi.listarOBuscar().then(data => {
+      usuariosApi.listarOBuscar(undefined, targetEmpresaId).then(data => {
         setUsuarios(data);
       }).catch(console.error);
     }
 
-    equiposApi.listarOBuscar(undefined, sucursalId).then(data => {
+    equiposApi.listarOBuscar(undefined, sucursalId, targetEmpresaId).then(data => {
       setEquiposCatalogo(data);
     }).catch(console.error);
 
@@ -103,7 +105,7 @@ export const CotizacionForm = () => {
         setValue('notaImportante', sucursalActiva.notaPredeterminada);
       }
     }
-  }, [sucursalActiva, user?.username, isAdminOrGerente, setValue]);
+  }, [sucursalActiva, user?.username, user?.empresaId, isAdminOrGerente, setValue]);
 
   // Autocompletado de Clientes
   const handleBuscarCliente = (texto: string) => {
@@ -210,6 +212,7 @@ export const CotizacionForm = () => {
     return {
       ...data,
       sucursalId: sucursalActiva?.id || 1,
+      empresaId: sucursalActiva?.empresaId || user?.empresaId,
       subtotalSinIva,
       montoIva,
       totalInversion,
@@ -305,6 +308,7 @@ export const CotizacionForm = () => {
   const handleConfirmarGuardarEquiposYCotizar = async () => {
     setMostrarModalEquiposNuevos(false);
     setLoading(true);
+    const targetEmpresaId = sucursalActiva?.empresaId || user?.empresaId;
     try {
       for (const itemNuevo of equiposNuevosDetectados) {
         await equiposApi.crearOActualizar({
@@ -314,10 +318,11 @@ export const CotizacionForm = () => {
           precioReferencial: Number(itemNuevo.precioUnitario || 0),
           tiempoEntregaPredeterminado: itemNuevo.tiempoEntrega?.trim() || 'De 5 a 6 semanas',
           sucursalId: sucursalActiva?.id,
+          empresaId: targetEmpresaId,
           categoria: 'General'
         });
       }
-      const actualizados = await equiposApi.listarOBuscar(undefined, sucursalActiva?.id);
+      const actualizados = await equiposApi.listarOBuscar(undefined, sucursalActiva?.id, targetEmpresaId);
       setEquiposCatalogo(actualizados);
     } catch (err) {
       console.error('Error guardando equipos nuevos en el catálogo:', err);

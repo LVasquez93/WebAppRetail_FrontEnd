@@ -6,6 +6,7 @@ export interface Cliente {
   telefono?: string;
   correo?: string;
   direccion?: string;
+  empresaId?: number;
   sucursalId?: number;
   activo?: boolean;
 }
@@ -31,6 +32,7 @@ export interface Equipo {
   precioReferencial?: number;
   tiempoEntregaPredeterminado?: string;
   categoria?: string;
+  empresaId?: number;
   sucursalId?: number;
   activo?: boolean;
 }

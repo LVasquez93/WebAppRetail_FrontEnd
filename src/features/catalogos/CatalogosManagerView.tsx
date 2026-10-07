@@ -18,7 +18,9 @@ import { useAuth } from '../../context/AuthContext';
 
 export const CatalogosManagerView: React.FC = () => {
   const { user, isAdmin } = useAuth();
-  const { sucursales, sucursalActiva } = useSucursal();
+  const { sucursales, sucursalActiva, empresaSeleccionada } = useSucursal();
+
+  const targetEmpresaId = isAdmin ? empresaSeleccionada?.id : user?.empresaId;
 
   // Pestaña activa ('clientes' | 'equipos' | 'usuarios')
   const [tabActiva, setTabActiva] = useState<'clientes' | 'equipos' | 'usuarios'>('clientes');
@@ -72,15 +74,15 @@ export const CatalogosManagerView: React.FC = () => {
       setCargando(true);
       const sId = sucursalFiltro === 'TODAS' ? undefined : sucursalFiltro;
       const q = busqueda.trim() ? busqueda.trim() : undefined;
+      const empId = targetEmpresaId;
 
       if (tabActiva === 'clientes') {
-        const data = await clientesApi.listarOBuscar(q, sId);
+        const data = await clientesApi.listarOBuscar(q, sId, empId);
         setClientes(data);
       } else if (tabActiva === 'equipos') {
-        const data = await equiposApi.listarOBuscar(q, sId);
+        const data = await equiposApi.listarOBuscar(q, sId, empId);
         setEquipos(data);
       } else {
-        const empId = !isAdmin ? user?.empresaId : undefined;
         const data = await usuariosApi.listarOBuscar(q, empId);
         setUsuarios(data);
       }
@@ -93,7 +95,7 @@ export const CatalogosManagerView: React.FC = () => {
 
   useEffect(() => {
     cargarDatos();
-  }, [tabActiva, sucursalFiltro]);
+  }, [tabActiva, sucursalFiltro, targetEmpresaId]);
 
   const handleBuscar = (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,6 +105,7 @@ export const CatalogosManagerView: React.FC = () => {
   // Abrir Modal para Nuevo Registro
   const handleNuevo = () => {
     setRegistroEdicion(null);
+    const empresaIdAsignada = targetEmpresaId || 1;
     if (tabActiva === 'clientes') {
       setFormData({
         razonSocial: '',
@@ -112,6 +115,7 @@ export const CatalogosManagerView: React.FC = () => {
         correo: '',
         direccion: '',
         sucursalId: sucursalFiltro !== 'TODAS' ? sucursalFiltro : (sucursalActiva?.id || 1),
+        empresaId: empresaIdAsignada,
         activo: true
       });
     } else if (tabActiva === 'equipos') {
@@ -123,6 +127,7 @@ export const CatalogosManagerView: React.FC = () => {
         tiempoEntregaPredeterminado: 'De 5 a 6 semanas',
         categoria: 'General',
         sucursalId: sucursalFiltro !== 'TODAS' ? sucursalFiltro : (sucursalActiva?.id || 1),
+        empresaId: empresaIdAsignada,
         activo: true
       });
     } else {
@@ -134,7 +139,7 @@ export const CatalogosManagerView: React.FC = () => {
         cargo: '',
         rol: 'ROLE_VENTAS',
         sucursalId: sucursalFiltro !== 'TODAS' ? sucursalFiltro : (sucursalActiva?.id || 1),
-        empresaId: user?.empresaId,
+        empresaId: empresaIdAsignada,
         activo: true
       });
     }
@@ -153,32 +158,32 @@ export const CatalogosManagerView: React.FC = () => {
     e.preventDefault();
     try {
       setGuardandoForm(true);
+      const payloadConEmpresa = {
+        ...formData,
+        empresaId: formData.empresaId || targetEmpresaId || 1
+      };
       if (tabActiva === 'clientes') {
         if (registroEdicion) {
-          await clientesApi.actualizar(registroEdicion.id, formData);
+          await clientesApi.actualizar(registroEdicion.id, payloadConEmpresa);
           mostrarToast(`Cliente "${formData.razonSocial}" actualizado con éxito`);
         } else {
-          await clientesApi.crear(formData);
+          await clientesApi.crear(payloadConEmpresa);
           mostrarToast(`Cliente "${formData.razonSocial}" creado con éxito`);
         }
       } else if (tabActiva === 'equipos') {
         if (registroEdicion) {
-          await equiposApi.actualizar(registroEdicion.id, formData);
+          await equiposApi.actualizar(registroEdicion.id, payloadConEmpresa);
           mostrarToast(`Equipo "${formData.descripcion}" actualizado con éxito`);
         } else {
-          await equiposApi.crearOActualizar(formData);
+          await equiposApi.crearOActualizar(payloadConEmpresa);
           mostrarToast(`Equipo "${formData.descripcion}" registrado con éxito`);
         }
       } else {
-        const userPayload = {
-          ...formData,
-          empresaId: formData.empresaId || user?.empresaId,
-        };
         if (registroEdicion) {
-          await usuariosApi.actualizar(registroEdicion.id, userPayload);
+          await usuariosApi.actualizar(registroEdicion.id, payloadConEmpresa);
           mostrarToast(`Usuario "${formData.username}" actualizado con éxito`);
         } else {
-          await usuariosApi.crear(userPayload);
+          await usuariosApi.crear(payloadConEmpresa);
           mostrarToast(`Usuario "${formData.username}" creado con éxito`);
         }
       }
@@ -237,13 +242,13 @@ export const CatalogosManagerView: React.FC = () => {
       return;
     }
     if (tabActiva === 'clientes') {
-      const parsed = parsearCsvClientes(texto, sucursalLote);
+      const parsed = parsearCsvClientes(texto, sucursalLote, targetEmpresaId);
       setPrevisualizacionLote(parsed);
     } else if (tabActiva === 'equipos') {
-      const parsed = parsearCsvEquipos(texto, sucursalLote);
+      const parsed = parsearCsvEquipos(texto, sucursalLote, targetEmpresaId);
       setPrevisualizacionLote(parsed);
     } else {
-      const parsed = parsearCsvUsuarios(texto);
+      const parsed = parsearCsvUsuarios(texto, targetEmpresaId);
       setPrevisualizacionLote(parsed);
     }
   };
@@ -305,12 +310,21 @@ export const CatalogosManagerView: React.FC = () => {
       {/* Encabezado Principal */}
       <div className="bg-gradient-to-r from-[#1F3D3D] to-[#2a5252] text-white p-6 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-2xl">🗂️</span>
             <h1 className="text-2xl font-black tracking-wide">Administración de Catálogos</h1>
+            {isAdmin ? (
+              <span className="bg-purple-900/50 border border-purple-400/40 text-purple-200 text-xs px-2.5 py-1 rounded-full font-bold ml-1">
+                🏛️ {empresaSeleccionada?.nombre || 'Empresa'}
+              </span>
+            ) : user?.empresaNombre ? (
+              <span className="bg-teal-900/50 border border-teal-400/40 text-teal-200 text-xs px-2.5 py-1 rounded-full font-bold ml-1">
+                🏢 {user.empresaNombre}
+              </span>
+            ) : null}
           </div>
           <p className="text-xs sm:text-sm text-teal-100/90 mt-1">
-            Gestión centralizada de Clientes, Equipos/Productos y Emisores por Sucursal con soporte de Carga por Lotes.
+            Gestión de Clientes, Equipos/Productos y Emisores segregados por empresa y sucursal.
           </p>
         </div>
 

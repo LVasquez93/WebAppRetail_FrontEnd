@@ -108,25 +108,30 @@ src/
 - **Integración con Axios**: [axiosClient.ts](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/api/axiosClient.ts) inyecta automáticamente el token en la cabecera `Authorization: Bearer <token>` de cada petición y redirige a `/login` en caso de respuesta `401 Unauthorized`.
 
 ### 2. `SucursalContext.tsx`
-- **Responsabilidad**: Garantiza que toda la aplicación filtre los datos por la sucursal activa respetando el aislamiento multi-empresa.
+- **Responsabilidad**: Gestiona el contexto activo multi-tenant tanto a nivel de Empresa como de Sucursal.
+- **Estado expuesto**: `empresas`, `empresaSeleccionada`, `setEmpresaSeleccionada`, `sucursales`, `sucursalActiva`, `setSucursalActiva`, `cargandoEmpresas`, `cargandoSucursales`.
 - **Comportamiento por Rol**:
-  - `ROLE_ADMIN`: Super Administrador global. Puede ver y seleccionar todas las sucursales de cualquier empresa.
-  - `ROLE_GERENTE`: Sus sucursales se filtran automáticamente por `user.empresaId`. Puede crear, editar y eliminar sucursales de su propia empresa.
-  - `ROLE_VENTAS`: **Bloqueado automáticamente**. Fija la `sucursalId` que el usuario tiene asignada en la base de datos dentro de su empresa.
+  - `ROLE_ADMIN`: **Super Administrador de la Plataforma SaaS (Global)**.
+    - No pertenece a ninguna empresa fija.
+    - Dispone de un selector interactivo de **Empresa** en el Navbar y en el Dashboard para alternar entre tenants en tiempo real.
+    - Al cambiar de empresa, las sucursales se recargan dinámicamente y los catálogos/formularios se sincronizan con la organización activa.
+  - `ROLE_GERENTE`: Dueño/Gerente de empresa. Su contexto queda fijado a `user.empresaId`. Puede ver y administrar todas las sucursales de su empresa y sus propios catálogos.
+  - `ROLE_VENTAS`: **Bloqueado automáticamente**. Fija la `sucursalId` y `empresaId` asignadas a su cuenta.
 
 ---
 
-## 5. Matriz de Control de Acceso en la Interfaz (RBAC)
+## 5. Matriz de Control de Acceso en la Interfaz (RBAC) & Multi-Tenancy
 
-| Módulo / Elemento UI | Ruta | `ROLE_ADMIN` | `ROLE_GERENTE` | `ROLE_VENTAS` |
+| Módulo / Elemento UI | Ruta | `ROLE_ADMIN` (SaaS SuperAdmin) | `ROLE_GERENTE` | `ROLE_VENTAS` |
 | :--- | :--- | :---: | :---: | :---: |
-| **Dashboard Principal** | `/` | **Acceso Total** | **Acceso Total** | **Acceso Total** |
-| **Módulo Empresas** | `/empresas` | **Acceso Total** | **Bloqueado** (403) | **Bloqueado** (403) |
-| **Nueva Cotización** | `/cotizaciones/nueva` | Permitido | Permitido | Permitido (en su sucursal) |
-| **Historial de Cotizaciones** | `/cotizaciones` | Permitido | Permitido | Permitido |
-| **Selector de Sucursal (Navbar)** | N/A | Visible (Todas) | Visible (Su Empresa) | **Oculto** (Fijo) |
-| **Módulo Catálogos** | `/catalogos` | Acceso Global | Filtrado por su Empresa | **Bloqueado** (Redirige a `/`) |
-| **Módulo Sucursales** | `/sucursales` | Acceso Total | Gestiona sus Sucursales | **Bloqueado** (Redirige a `/`) |
+| **Dashboard Principal** | `/` | **Acceso Total** (Selector Tenant + Sucursal) | Acceso Total (Su Empresa) | Acceso Total (Su Sucursal) |
+| **Selector de Empresa (Navbar)** | N/A | **Interactivo** (Todas las Empresas) | Oculto (Muestra Badge Empresa) | Oculto (Muestra Badge Empresa) |
+| **Selector de Sucursal (Navbar)** | N/A | Interactivo (De la Empresa elegida) | Interactivo (De su Empresa) | **Bloqueado** (🔒 Sucursal Fija) |
+| **Módulo Empresas** | `/empresas` | **Acceso Total** (CRUD + Gerentes) | **Bloqueado** (403) | **Bloqueado** (403) |
+| **Nueva Cotización** | `/cotizaciones/nueva` | Cotiza en Empresa/Sucursal activa | Cotiza en su Empresa/Sucursal | Cotiza en su Sucursal fija |
+| **Historial de Cotizaciones** | `/cotizaciones` | Filtros Cascada (Empresa -> Sucursal) + Columna Empresa | Filtrado por su Empresa | Filtrado por su Empresa y Sucursal |
+| **Módulo Catálogos** | `/catalogos` | Segregado por Empresa activa | Segregado por su Empresa | **Bloqueado** (Redirige a `/`) |
+| **Módulo Sucursales** | `/sucursales` | Gestiona sucursales de Empresa activa | Gestiona sus Sucursales | **Bloqueado** (Redirige a `/`) |
 
 ---
 

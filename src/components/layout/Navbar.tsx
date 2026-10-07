@@ -5,21 +5,35 @@ import { useAuth } from '../../context/AuthContext';
 
 export const Navbar = () => {
   const location = useLocation();
-  const { sucursales, sucursalActiva, setSucursalActiva, cargandoSucursales, recargarSucursales } = useSucursal();
+  const {
+    empresas,
+    empresaSeleccionada,
+    setEmpresaSeleccionada,
+    sucursales,
+    sucursalActiva,
+    setSucursalActiva,
+    cargandoSucursales,
+    recargarSucursales
+  } = useSucursal();
   const { user, isAuthenticated, isAdminOrGerente, isAdmin, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [empresaDropdownOpen, setEmpresaDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const empresaDropdownRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) =>
     location.pathname === path
       ? 'bg-white/20 font-semibold'
       : 'hover:bg-white/10';
 
-  // Cerrar dropdown si se hace click fuera
+  // Cerrar dropdowns si se hace click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setDropdownOpen(false);
+      }
+      if (empresaDropdownRef.current && !empresaDropdownRef.current.contains(event.target as Node)) {
+        setEmpresaDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -64,18 +78,99 @@ export const Navbar = () => {
               <span className="text-xs sm:text-sm text-[#C88D4B] font-medium">Cotizador</span>
             </Link>
 
-            {/* Selector de Sucursal: SOLO INTERACTIVO PARA ADMIN Y GERENTE */}
+            {/* 1. Selector de Empresa: EXCLUSIVO PARA SUPERADMIN */}
+            {isAdmin && empresas && empresas.length > 0 && (
+              <div className="relative ml-1 sm:ml-3" ref={empresaDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmpresaDropdownOpen(!empresaDropdownOpen);
+                    setDropdownOpen(false);
+                  }}
+                  className="flex items-center gap-1.5 sm:gap-2 bg-purple-900/40 hover:bg-purple-900/60 text-xs sm:text-sm px-2.5 sm:px-3 py-1.5 rounded-lg border border-purple-400/40 text-purple-100 transition-colors shadow-sm cursor-pointer"
+                  title="Cambiar empresa activa en la plataforma (SuperAdmin)"
+                >
+                  <span className="text-xs">🏛️</span>
+                  <span className="font-bold text-white max-w-[110px] sm:max-w-[160px] truncate">
+                    {empresaSeleccionada?.nombre || 'Empresa'}
+                  </span>
+                  <span className="text-[10px] text-purple-300">▼</span>
+                </button>
+
+                {empresaDropdownOpen && (
+                  <div className="absolute left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl py-2 z-50 border border-gray-200 text-gray-800 animate-fadeIn">
+                    <div className="px-3 py-1.5 border-b border-gray-100 text-[11px] font-bold text-purple-700 uppercase tracking-wider flex items-center justify-between">
+                      <span>Empresas (Tenants)</span>
+                      <span className="text-[10px] bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded font-mono">{empresas.length}</span>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {empresas.map(emp => {
+                        const isSelected = empresaSeleccionada?.id === emp.id;
+                        return (
+                          <button
+                            key={emp.id}
+                            type="button"
+                            onClick={() => {
+                              setEmpresaSeleccionada(emp);
+                              setEmpresaDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between transition-colors ${
+                              isSelected
+                                ? 'bg-purple-50 text-purple-900 font-bold border-l-4 border-purple-600'
+                                : 'hover:bg-gray-50 text-gray-700'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-semibold leading-tight">{emp.nombre}</div>
+                              <div className="text-[10px] text-gray-500">{emp.razonSocial || 'Empresa'}</div>
+                            </div>
+                            {isSelected && (
+                              <span className="text-purple-600 font-bold ml-2">✓</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="border-t border-gray-100 mt-1 pt-1 px-2">
+                      <Link
+                        to="/empresas"
+                        onClick={() => setEmpresaDropdownOpen(false)}
+                        className="block text-center text-[11px] text-purple-700 hover:text-purple-900 font-semibold py-1"
+                      >
+                        ⚙️ Administrar Empresas
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Empresa fija para usuarios NO Admin */}
+            {!isAdmin && user?.empresaNombre && (
+              <div
+                className="ml-1 sm:ml-3 hidden sm:flex items-center gap-1.5 bg-[#173030] text-xs px-2.5 py-1.5 rounded-lg border border-teal-500/20 text-teal-200 shadow-inner"
+                title="Empresa asignada a tu cuenta"
+              >
+                <span>🏢</span>
+                <span className="font-bold text-white max-w-[140px] truncate">{user.empresaNombre}</span>
+              </div>
+            )}
+
+            {/* 2. Selector de Sucursal: SOLO INTERACTIVO PARA ADMIN Y GERENTE */}
             {isAdminOrGerente ? (
               sucursales && sucursales.length > 0 ? (
-                <div className="relative ml-1 sm:ml-4" ref={dropdownRef}>
+                <div className="relative ml-1 sm:ml-3" ref={dropdownRef}>
                   <button
                     type="button"
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    onClick={() => {
+                      setDropdownOpen(!dropdownOpen);
+                      setEmpresaDropdownOpen(false);
+                    }}
                     className="flex items-center gap-1.5 sm:gap-2 bg-[#2a5252] hover:bg-[#346262] text-xs sm:text-sm px-2.5 sm:px-3 py-1.5 rounded-lg border border-teal-400/30 transition-colors shadow-sm cursor-pointer"
-                    title="Cambiar sucursal activa (Permiso Admin/Gerente)"
+                    title="Cambiar sucursal activa"
                   >
                     <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span className="font-semibold text-teal-100 max-w-[120px] sm:max-w-[200px] truncate">
+                    <span className="font-semibold text-teal-100 max-w-[110px] sm:max-w-[180px] truncate">
                       {sucursalActiva?.nombre || 'Seleccionar Sucursal'}
                     </span>
                     <span className="text-[10px] text-teal-300">▼</span>
@@ -84,7 +179,7 @@ export const Navbar = () => {
                   {dropdownOpen && (
                     <div className="absolute left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl py-2 z-50 border border-gray-200 text-gray-800 animate-fadeIn">
                       <div className="px-3 py-1.5 border-b border-gray-100 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                        Sucursales Disponibles
+                        Sucursales de {empresaSeleccionada?.nombre || 'la Empresa'}
                       </div>
                       {sucursales.map(s => {
                         const isSelected = sucursalActiva?.id === s.id;
@@ -142,11 +237,11 @@ export const Navbar = () => {
             ) : (
               /* USUARIOS NO ADMIN: SUCURSAL FIJA BLOQUEADA */
               <div
-                className="ml-1 sm:ml-4 flex items-center gap-1.5 bg-[#173030] text-xs px-2.5 sm:px-3 py-1.5 rounded-lg border border-teal-500/20 text-teal-200 shadow-inner"
+                className="ml-1 sm:ml-3 flex items-center gap-1.5 bg-[#173030] text-xs px-2.5 sm:px-3 py-1.5 rounded-lg border border-teal-500/20 text-teal-200 shadow-inner"
                 title="Sucursal asignada a tu cuenta de usuario"
               >
                 <span className="text-[11px]">🔒</span>
-                <span className="font-semibold text-teal-100 max-w-[120px] sm:max-w-[200px] truncate">
+                <span className="font-semibold text-teal-100 max-w-[110px] sm:max-w-[180px] truncate">
                   {sucursalActiva?.nombre || 'Sucursal Asignada'}
                 </span>
               </div>
@@ -214,7 +309,7 @@ export const Navbar = () => {
                   {getRoleBadge(user?.rol)}
                 </div>
                 <div className="text-[10px] text-teal-300/80">
-                  {user?.empresaNombre ? `${user.empresaNombre} • ` : ''}
+                  {isAdmin ? 'Plataforma Global SaaS • ' : (user?.empresaNombre ? `${user.empresaNombre} • ` : '')}
                   {user?.cargo || user?.username}
                 </div>
               </div>
