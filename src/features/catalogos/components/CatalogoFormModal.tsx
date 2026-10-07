@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sucursal } from '../types/catalogos.types';
+import { useAuth } from '../../../context/AuthContext';
 
 interface CatalogoFormModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export const CatalogoFormModal: React.FC<CatalogoFormModalProps> = ({
   onSubmit,
   onClose,
 }) => {
+  const { isAdmin } = useAuth();
   if (!isOpen) return null;
 
   return (
@@ -274,25 +276,43 @@ export const CatalogoFormModal: React.FC<CatalogoFormModalProps> = ({
                   <label className="block font-semibold text-gray-700 mb-1">Rol de Acceso *</label>
                   <select
                     value={formData.rol || 'ROLE_VENTAS'}
-                    onChange={e => setFormData({ ...formData, rol: e.target.value })}
+                    onChange={e => {
+                      const newRol = e.target.value;
+                      setFormData({
+                        ...formData,
+                        rol: newRol,
+                        sucursalId: newRol === 'ROLE_ADMIN' ? undefined : (formData.sucursalId || sucursales[0]?.id || 1),
+                        empresaId: newRol === 'ROLE_ADMIN' ? undefined : formData.empresaId,
+                      });
+                    }}
                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
                   >
                     <option value="ROLE_VENTAS">ROLE_VENTAS (Vendedor/Emisor)</option>
                     <option value="ROLE_GERENTE">ROLE_GERENTE (Gerente de Sucursal)</option>
-                    <option value="ROLE_ADMIN">ROLE_ADMIN (Administrador)</option>
+                    {isAdmin && (
+                      <option value="ROLE_ADMIN">ROLE_ADMIN (Administrador Global SaaS)</option>
+                    )}
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Sucursal Asignada *</label>
-                  <select
-                    value={formData.sucursalId || (sucursales[0]?.id || 1)}
-                    onChange={e => setFormData({ ...formData, sucursalId: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
-                  >
-                    {sucursales.map(s => (
-                      <option key={s.id} value={s.id}>{s.nombre}</option>
-                    ))}
-                  </select>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    {formData.rol === 'ROLE_ADMIN' ? 'Alcance Operativo' : 'Sucursal Asignada *'}
+                  </label>
+                  {formData.rol === 'ROLE_ADMIN' ? (
+                    <div className="w-full px-3 py-2 border border-purple-200 bg-purple-50 text-purple-900 rounded-lg text-xs font-semibold flex items-center gap-1.5 h-[42px]">
+                      <span>🛡️ Acceso Global SaaS (Sin restricción de empresa ni sucursal)</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={formData.sucursalId || (sucursales[0]?.id || '')}
+                      onChange={e => setFormData({ ...formData, sucursalId: Number(e.target.value) })}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                    >
+                      {sucursales.map(s => (
+                        <option key={s.id} value={s.id}>{s.nombre}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </div>
             </>

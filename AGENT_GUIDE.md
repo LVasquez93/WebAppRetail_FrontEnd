@@ -127,11 +127,20 @@ src/
 | **Dashboard Principal** | `/` | **Acceso Total** (Selector Tenant + Sucursal) | Acceso Total (Su Empresa) | Acceso Total (Su Sucursal) |
 | **Selector de Empresa (Navbar)** | N/A | **Interactivo** (Todas las Empresas) | Oculto (Muestra Badge Empresa) | Oculto (Muestra Badge Empresa) |
 | **Selector de Sucursal (Navbar)** | N/A | Interactivo (De la Empresa elegida) | Interactivo (De su Empresa) | **Bloqueado** (🔒 Sucursal Fija) |
+| **Perfil / Editar Cuenta (Navbar)**| N/A | **Interactivo** (Modal Mi Perfil) | **Interactivo** (Modal Mi Perfil) | **Interactivo** (Modal Mi Perfil) |
 | **Módulo Empresas** | `/empresas` | **Acceso Total** (CRUD + Gerentes) | **Bloqueado** (403) | **Bloqueado** (403) |
 | **Nueva Cotización** | `/cotizaciones/nueva` | Cotiza en Empresa/Sucursal activa | Cotiza en su Empresa/Sucursal | Cotiza en su Sucursal fija |
-| **Historial de Cotizaciones** | `/cotizaciones` | Filtros Cascada (Empresa -> Sucursal) + Columna Empresa | Filtrado por su Empresa | Filtrado por su Empresa y Sucursal |
-| **Módulo Catálogos** | `/catalogos` | Segregado por Empresa activa | Segregado por su Empresa | **Bloqueado** (Redirige a `/`) |
+| **Historial de Cotizaciones** | `/cotizaciones` | Filtros Cascada (Empresa -> Sucursal) + Columna Empresa | Filtrado en cascada restringido a su Empresa | Filtrado por su Empresa y Sucursal |
+| **Módulo Catálogos** | `/catalogos` | Segregado por Empresa + Vista especial de Administradores SaaS | Segregado por su Empresa | **Bloqueado** (Redirige a `/`) |
 | **Módulo Sucursales** | `/sucursales` | Gestiona sucursales de Empresa activa | Gestiona sus Sucursales | **Bloqueado** (Redirige a `/`) |
+
+---
+
+### Aislamiento de Sucursales y Edición de Administradores:
+1. **Filtro en Cascada para Gerentes**: En `CotizacionesList.tsx` y `SucursalContext.tsx`, los usuarios con rol `ROLE_GERENTE` resuelven como empresa objetivo `user.empresaId`. Las sucursales disponibles en el filtro quedan estrictamente acotadas a las que pertenecen a su empresa (`s.empresaId === user.empresaId`), evitando mezcla con otras organizaciones.
+2. **Edición y Gestión de Administradores Globales (SaaS)**:
+   - **Desde Catálogos (`CatalogosManagerView.tsx`)**: Los administradores disponen de un selector de alcance en la pestaña *Usuarios* para alternar entre "Usuarios Empresa", "🛡️ Administradores Globales SaaS" (`soloAdmins=true`) y "Todos los Usuarios". Los administradores creados o editados mantienen alcance global (`empresaId = null`, `sucursalId = null`).
+   - **Desde la Barra Superior (`Navbar.tsx`)**: Cualquier usuario autenticado (incluyendo el SuperAdmin) puede presionar el botón **"⚙️ Mi Perfil"** para actualizar su nombre completo, correo, cargo o cambiar su contraseña directamente.
 
 ---
 

@@ -19,9 +19,13 @@ export const CotizacionesList = () => {
   const [filtroEmpresaId, setFiltroEmpresaId] = useState<number | 'TODAS'>('TODAS');
   const [filtroSucursalId, setFiltroSucursalId] = useState<number | 'TODAS'>('TODAS');
 
-  // Sucursales disponibles para el selector (en cascada si el admin selecciona una empresa)
-  const sucursalesFiltradas = isAdmin && filtroEmpresaId !== 'TODAS'
-    ? sucursales.filter(s => s.empresaId === filtroEmpresaId)
+  // Sucursales disponibles para el selector (en cascada si el admin selecciona una empresa o restringido a la empresa del gerente)
+  const targetEmpresaId = isAdmin
+    ? (filtroEmpresaId === 'TODAS' ? undefined : filtroEmpresaId)
+    : user?.empresaId;
+
+  const sucursalesFiltradas = targetEmpresaId
+    ? sucursales.filter(s => s.empresaId === targetEmpresaId)
     : sucursales;
 
   // Clear history state after reading so refreshing doesn't keep showing the message

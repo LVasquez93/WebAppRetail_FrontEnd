@@ -12,6 +12,7 @@ interface AuthContextType {
   isAdminOrGerente: boolean;
   login: (credentials: LoginRequest) => Promise<AuthResponse>;
   logout: () => void;
+  recargarSesion: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -87,6 +88,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     window.location.href = '/login';
   };
 
+  const recargarSesion = async () => {
+    try {
+      const usuarioActual = await authApi.getMe();
+      setUser(usuarioActual);
+      localStorage.setItem('cotizador_user', JSON.stringify(usuarioActual));
+    } catch (e) {
+      console.error('Error al recargar sesión:', e);
+    }
+  };
+
   const rol = user?.rol || '';
   const isAdmin = rol === 'ROLE_ADMIN' || rol === 'ADMIN';
   const isGerente = rol === 'ROLE_GERENTE' || rol === 'GERENTE';
@@ -105,6 +116,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isAdminOrGerente,
         login,
         logout,
+        recargarSesion,
       }}
     >
       {children}

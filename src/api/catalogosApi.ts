@@ -37,10 +37,11 @@ export const clientesApi = {
 };
 
 export const usuariosApi = {
-  listarOBuscar: async (query?: string, empresaId?: number): Promise<Usuario[]> => {
+  listarOBuscar: async (query?: string, empresaId?: number, soloAdmins?: boolean): Promise<Usuario[]> => {
     const params: Record<string, any> = {};
     if (query) params.q = query;
     if (empresaId) params.empresaId = empresaId;
+    if (soloAdmins !== undefined) params.soloAdmins = soloAdmins;
     const response = await axiosClient.get<Usuario[]>('/usuarios', { params });
     return response.data;
   },

@@ -83,11 +83,14 @@ export const SucursalProvider: React.FC<{ children: ReactNode }> = ({ children }
         : (isAdmin ? empresaSeleccionada?.id : user?.empresaId);
 
       const data = await sucursalesApi.listar(empId);
-      setSucursales(data);
+      const filtered = !isAdmin && user?.empresaId
+        ? data.filter(s => s.empresaId === user.empresaId)
+        : data;
+      setSucursales(filtered);
 
-      if (data && data.length > 0) {
+      if (filtered && filtered.length > 0) {
         if (!isAdminOrGerente && user?.sucursalId) {
-          const asignada = data.find(s => s.id === user.sucursalId) || data[0];
+          const asignada = filtered.find(s => s.id === user.sucursalId) || filtered[0];
           setSucursalActivaState(asignada);
           localStorage.setItem('cotizador_sucursal_id', String(asignada.id));
         } else {
@@ -95,13 +98,13 @@ export const SucursalProvider: React.FC<{ children: ReactNode }> = ({ children }
           let seleccionada: Sucursal | undefined;
 
           if (guardadoId) {
-            seleccionada = data.find(s => s.id === Number(guardadoId));
+            seleccionada = filtered.find(s => s.id === Number(guardadoId));
           }
           if (!seleccionada && user?.sucursalId) {
-            seleccionada = data.find(s => s.id === user.sucursalId);
+            seleccionada = filtered.find(s => s.id === user.sucursalId);
           }
           if (!seleccionada) {
-            seleccionada = data[0];
+            seleccionada = filtered[0];
           }
 
           setSucursalActivaState(seleccionada);
@@ -119,9 +122,12 @@ export const SucursalProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   useEffect(() => {
     if (!cargandoEmpresas) {
-      cargarSucursales(empresaSeleccionada ? empresaSeleccionada.id : null);
+      const targetId = isAdmin
+        ? (empresaSeleccionada ? empresaSeleccionada.id : null)
+        : (user?.empresaId || null);
+      cargarSucursales(targetId);
     }
-  }, [empresaSeleccionada?.id, cargandoEmpresas, user?.sucursalId]);
+  }, [empresaSeleccionada?.id, cargandoEmpresas, user?.sucursalId, user?.empresaId, isAdmin]);
 
   const setEmpresaSeleccionada = (empresa: Empresa | null) => {
     if (!isAdmin) {

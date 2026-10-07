@@ -53,14 +53,26 @@ export const UsuariosTable: React.FC<UsuariosTableProps> = ({
                   {u.correo || '—'}
                 </td>
                 <td className="p-3">
-                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-gray-100 text-gray-700 border">
-                    {u.rol}
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                    u.rol === 'ROLE_ADMIN'
+                      ? 'bg-purple-100 text-purple-800 border-purple-300 font-bold'
+                      : u.rol === 'ROLE_GERENTE'
+                      ? 'bg-blue-100 text-blue-800 border-blue-300'
+                      : 'bg-gray-100 text-gray-700'
+                  }`}>
+                    {u.rol === 'ROLE_ADMIN' ? '🛡️ ADMIN (SaaS)' : u.rol === 'ROLE_GERENTE' ? '👔 GERENTE' : '💼 VENTAS'}
                   </span>
                 </td>
                 <td className="p-3">
-                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-teal-50 text-teal-800 border border-teal-200">
-                    {obtenerNombreSucursal(u.sucursalId)}
-                  </span>
+                  {u.rol === 'ROLE_ADMIN' || !u.sucursalId ? (
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-800 border border-purple-200">
+                      🛡️ Global (SaaS)
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-teal-50 text-teal-800 border border-teal-200">
+                      {obtenerNombreSucursal(u.sucursalId)}
+                    </span>
+                  )}
                 </td>
                 <td className="p-3 text-center">
                   <div className="flex items-center justify-center gap-1.5">

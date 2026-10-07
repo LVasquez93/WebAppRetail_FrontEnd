@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSucursal } from '../../context/SucursalContext';
 import { useAuth } from '../../context/AuthContext';
+import { usuariosApi } from '../../api/catalogosApi';
 
 export const Navbar = () => {
   const location = useLocation();
@@ -15,16 +16,72 @@ export const Navbar = () => {
     cargandoSucursales,
     recargarSucursales
   } = useSucursal();
-  const { user, isAuthenticated, isAdminOrGerente, isAdmin, logout } = useAuth();
+  const { user, isAuthenticated, isAdminOrGerente, isAdmin, logout, recargarSesion } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [empresaDropdownOpen, setEmpresaDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const empresaDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Estados Modal de Edición de Perfil
+  const [modalPerfilAbierto, setModalPerfilAbierto] = useState(false);
+  const [perfilForm, setPerfilForm] = useState({
+    nombreCompleto: '',
+    correo: '',
+    cargo: '',
+    password: '',
+  });
+  const [guardandoPerfil, setGuardandoPerfil] = useState(false);
+  const [perfilExito, setPerfilExito] = useState(false);
+
   const isActive = (path: string) =>
     location.pathname === path
       ? 'bg-white/20 font-semibold'
       : 'hover:bg-white/10';
+
+  const abrirModalPerfil = () => {
+    if (user) {
+      setPerfilForm({
+        nombreCompleto: user.nombreCompleto || '',
+        correo: user.correo || '',
+        cargo: user.cargo || '',
+        password: '',
+      });
+      setPerfilExito(false);
+      setModalPerfilAbierto(true);
+    }
+  };
+
+  const handleGuardarPerfil = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    try {
+      setGuardandoPerfil(true);
+      const payload: any = {
+        username: user.username,
+        nombreCompleto: perfilForm.nombreCompleto.trim(),
+        correo: perfilForm.correo?.trim() || null,
+        cargo: perfilForm.cargo?.trim() || null,
+        rol: user.rol,
+        empresaId: user.empresaId,
+        sucursalId: user.sucursalId,
+      };
+      if (perfilForm.password.trim()) {
+        payload.password = perfilForm.password.trim();
+      }
+      await usuariosApi.actualizar(user.id, payload);
+      await recargarSesion();
+      setPerfilExito(true);
+      setTimeout(() => {
+        setModalPerfilAbierto(false);
+        setPerfilExito(false);
+      }, 1200);
+    } catch (err: any) {
+      console.error('Error al actualizar perfil:', err);
+      alert('Error al actualizar perfil: ' + (err?.response?.data?.message || err?.message));
+    } finally {
+      setGuardandoPerfil(false);
+    }
+  };
 
   // Cerrar dropdowns si se hace click fuera
   useEffect(() => {
@@ -316,6 +373,16 @@ export const Navbar = () => {
 
               <button
                 type="button"
+                onClick={abrirModalPerfil}
+                className="bg-white/10 hover:bg-white/20 text-white p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 border border-white/10 shadow-sm"
+                title="Editar mi perfil / Cambiar credenciales"
+              >
+                <span>⚙️</span>
+                <span className="hidden sm:inline">Mi Perfil</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={logout}
                 className="bg-white/10 hover:bg-red-500/80 text-white hover:text-white p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 border border-white/10 shadow-sm"
                 title="Cerrar sesión segura"
@@ -327,6 +394,111 @@ export const Navbar = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de Edición de Mi Perfil / Administrador */}
+      {modalPerfilAbierto && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 text-gray-800">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-fadeIn">
+            <div className="bg-[#1F3D3D] text-white p-4 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⚙️</span>
+                <h3 className="font-bold text-base sm:text-lg">Mi Perfil de Usuario</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalPerfilAbierto(false)}
+                className="text-gray-300 hover:text-white text-xl font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleGuardarPerfil} className="p-5 space-y-4">
+              {perfilExito && (
+                <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-lg text-xs font-semibold flex items-center gap-2">
+                  <span>✅</span>
+                  <span>¡Perfil y credenciales actualizados exitosamente!</span>
+                </div>
+              )}
+
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 flex justify-between items-center">
+                <div>
+                  <span className="text-xs text-gray-500 font-semibold block">Usuario (Identificador)</span>
+                  <span className="font-mono font-bold text-sm text-[#1F3D3D]">{user?.username}</span>
+                </div>
+                <div>
+                  {getRoleBadge(user?.rol)}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Nombre Completo *</label>
+                <input
+                  type="text"
+                  required
+                  value={perfilForm.nombreCompleto}
+                  onChange={(e) => setPerfilForm({ ...perfilForm, nombreCompleto: e.target.value })}
+                  placeholder="Ej: Erick Ramirez"
+                  className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Correo Electrónico</label>
+                  <input
+                    type="email"
+                    value={perfilForm.correo}
+                    onChange={(e) => setPerfilForm({ ...perfilForm, correo: e.target.value })}
+                    placeholder="correo@ejemplo.com"
+                    className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Cargo / Puesto</label>
+                  <input
+                    type="text"
+                    value={perfilForm.cargo}
+                    onChange={(e) => setPerfilForm({ ...perfilForm, cargo: e.target.value })}
+                    placeholder="Ej: Administrador"
+                    className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  Nueva Contraseña (dejar en blanco para conservar actual)
+                </label>
+                <input
+                  type="password"
+                  value={perfilForm.password}
+                  onChange={(e) => setPerfilForm({ ...perfilForm, password: e.target.value })}
+                  placeholder="•••••••• (Opcional)"
+                  className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setModalPerfilAbierto(false)}
+                  className="px-4 py-2 border rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-100 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={guardandoPerfil}
+                  className="px-5 py-2 bg-[#1F3D3D] hover:bg-[#2a5252] text-white rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  {guardandoPerfil ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

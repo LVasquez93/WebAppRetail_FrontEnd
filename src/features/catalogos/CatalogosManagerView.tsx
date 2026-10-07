@@ -56,6 +56,9 @@ export const CatalogosManagerView: React.FC = () => {
   const [importandoLote, setImportandoLote] = useState(false);
   const [sucursalLote, setSucursalLote] = useState<number>(1);
 
+  // Sub-filtro para pestaña de usuarios (cuando es SuperAdmin)
+  const [filtroTipoUsuario, setFiltroTipoUsuario] = useState<'EMPRESA' | 'ADMINS' | 'TODOS'>('EMPRESA');
+
   // Sincronizar sucursal de lote con sucursal activa
   useEffect(() => {
     if (sucursalActiva?.id) {
@@ -83,7 +86,18 @@ export const CatalogosManagerView: React.FC = () => {
         const data = await equiposApi.listarOBuscar(q, sId, empId);
         setEquipos(data);
       } else {
-        const data = await usuariosApi.listarOBuscar(q, empId);
+        let data: Usuario[] = [];
+        if (isAdmin) {
+          if (filtroTipoUsuario === 'ADMINS') {
+            data = await usuariosApi.listarOBuscar(q, undefined, true);
+          } else if (filtroTipoUsuario === 'TODOS') {
+            data = await usuariosApi.listarOBuscar(q, undefined, undefined);
+          } else {
+            data = await usuariosApi.listarOBuscar(q, empId);
+          }
+        } else {
+          data = await usuariosApi.listarOBuscar(q, empId);
+        }
         setUsuarios(data);
       }
     } catch (error) {
@@ -95,7 +109,7 @@ export const CatalogosManagerView: React.FC = () => {
 
   useEffect(() => {
     cargarDatos();
-  }, [tabActiva, sucursalFiltro, targetEmpresaId]);
+  }, [tabActiva, sucursalFiltro, targetEmpresaId, filtroTipoUsuario]);
 
   const handleBuscar = (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,15 +145,16 @@ export const CatalogosManagerView: React.FC = () => {
         activo: true
       });
     } else {
+      const esAdminModo = isAdmin && filtroTipoUsuario === 'ADMINS';
       setFormData({
         username: '',
         password: '',
         nombreCompleto: '',
         correo: '',
-        cargo: '',
-        rol: 'ROLE_VENTAS',
-        sucursalId: sucursalFiltro !== 'TODAS' ? sucursalFiltro : (sucursalActiva?.id || 1),
-        empresaId: empresaIdAsignada,
+        cargo: esAdminModo ? 'Administrador de Plataforma' : '',
+        rol: esAdminModo ? 'ROLE_ADMIN' : 'ROLE_VENTAS',
+        sucursalId: esAdminModo ? undefined : (sucursalFiltro !== 'TODAS' ? sucursalFiltro : (sucursalActiva?.id || 1)),
+        empresaId: esAdminModo ? undefined : empresaIdAsignada,
         activo: true
       });
     }
@@ -158,9 +173,11 @@ export const CatalogosManagerView: React.FC = () => {
     e.preventDefault();
     try {
       setGuardandoForm(true);
+      const esAdminSaaS = tabActiva === 'usuarios' && formData.rol === 'ROLE_ADMIN';
       const payloadConEmpresa = {
         ...formData,
-        empresaId: formData.empresaId || targetEmpresaId || 1
+        empresaId: esAdminSaaS ? undefined : (formData.empresaId || targetEmpresaId || 1),
+        sucursalId: esAdminSaaS ? undefined : (formData.sucursalId || undefined),
       };
       if (tabActiva === 'clientes') {
         if (registroEdicion) {
@@ -408,6 +425,22 @@ export const CatalogosManagerView: React.FC = () => {
                 {sucursales.map(s => (
                   <option key={s.id} value={s.id}>{s.nombre}</option>
                 ))}
+              </select>
+            </div>
+          )}
+
+          {/* Filtro Especial para SuperAdmin en pestaña Usuarios */}
+          {tabActiva === 'usuarios' && isAdmin && (
+            <div className="flex items-center gap-1.5 ml-2">
+              <span className="text-xs font-bold text-purple-900 hidden lg:inline">Alcance:</span>
+              <select
+                value={filtroTipoUsuario}
+                onChange={(e) => setFiltroTipoUsuario(e.target.value as any)}
+                className="px-2.5 py-2 text-xs border rounded-lg bg-purple-50 text-purple-900 border-purple-300 font-bold focus:ring-2 focus:ring-purple-700"
+              >
+                <option value="EMPRESA">🏢 Empresa: {empresaSeleccionada?.nombre || 'Seleccionada'}</option>
+                <option value="ADMINS">🛡️ Administradores Globales SaaS</option>
+                <option value="TODOS">🌐 Todos los Usuarios del Sistema</option>
               </select>
             </div>
           )}
