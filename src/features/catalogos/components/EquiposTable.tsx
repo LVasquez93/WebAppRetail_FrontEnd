@@ -16,16 +16,16 @@ export const EquiposTable: React.FC<EquiposTableProps> = ({
 }) => {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse min-w-[850px]">
+      <table className="w-full text-left border-collapse min-w-[850px]" aria-label="Catálogo de Equipos y Productos">
         <thead>
           <tr className="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider border-b">
-            <th className="p-3 w-12 text-center">#</th>
-            <th className="p-3">Descripción y Part Number</th>
-            <th className="p-3">Características</th>
-            <th className="p-3">Precio Ref.</th>
-            <th className="p-3">Entrega</th>
-            <th className="p-3">Sucursal Asignada</th>
-            <th className="p-3 w-28 text-center">Acciones</th>
+            <th scope="col" className="p-3 w-12 text-center">#</th>
+            <th scope="col" className="p-3">Descripción y Part Number</th>
+            <th scope="col" className="p-3">Características</th>
+            <th scope="col" className="p-3">Precio Ref.</th>
+            <th scope="col" className="p-3">Entrega</th>
+            <th scope="col" className="p-3">Sucursal Asignada</th>
+            <th scope="col" className="p-3 w-28 text-center">Acciones</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 text-xs sm:text-sm">
@@ -73,18 +73,20 @@ export const EquiposTable: React.FC<EquiposTableProps> = ({
                     <button
                       type="button"
                       onClick={() => onEditar(e)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500"
                       title="Editar equipo"
+                      aria-label={`Editar equipo ${e.descripcion}`}
                     >
-                      ✏️
+                      <span aria-hidden="true">✏️</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => onEliminar(e.id, e.descripcion)}
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-red-500"
                       title="Eliminar equipo"
+                      aria-label={`Eliminar equipo ${e.descripcion}`}
                     >
-                      🗑️
+                      <span aria-hidden="true">🗑️</span>
                     </button>
                   </div>
                 </td>

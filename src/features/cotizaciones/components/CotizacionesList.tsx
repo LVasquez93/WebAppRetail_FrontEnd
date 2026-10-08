@@ -5,6 +5,7 @@ import { CotizacionResponse } from '../types/cotizacion.types';
 import { TenantScopeFilter } from '../../../components/common/TenantScopeFilter';
 import { useTenantScopeFilter } from '../../../components/common/useTenantScopeFilter';
 import { useAuth } from '../../../context/AuthContext';
+import { TableSkeleton } from '../../../components/common/skeletons/TableSkeleton';
 
 export const CotizacionesList = () => {
   const location = useLocation();
@@ -60,14 +61,14 @@ export const CotizacionesList = () => {
     }
   };
 
-  if (loading && page === 0 && cotizaciones.length === 0) {
-    return <div className="flex justify-center p-8">Cargando historial de cotizaciones...</div>;
-  }
-
   return (
     <div className="max-w-7xl mx-auto space-y-4 px-2 sm:px-4">
       {bannerMessage && (
-        <div className="bg-emerald-50 border border-emerald-300 text-emerald-800 p-4 sm:px-5 sm:py-4 rounded-xl flex items-center justify-between shadow-sm">
+        <div
+          role="status"
+          aria-live="polite"
+          className="bg-emerald-50 border border-emerald-300 text-emerald-800 p-4 sm:px-5 sm:py-4 rounded-xl flex items-center justify-between shadow-sm"
+        >
           <div className="flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 font-bold shrink-0">✓</span>
             <div>
@@ -77,8 +78,9 @@ export const CotizacionesList = () => {
           </div>
           <button
             onClick={() => setBannerMessage(null)}
-            className="text-emerald-500 hover:text-emerald-800 text-lg font-bold p-1 ml-2"
+            className="text-emerald-500 hover:text-emerald-800 text-lg font-bold p-1 ml-2 cursor-pointer"
             title="Cerrar notificación"
+            aria-label="Cerrar notificación"
           >
             ✕
           </button>
@@ -104,7 +106,9 @@ export const CotizacionesList = () => {
           />
         </div>
         
-        {cotizaciones.length === 0 ? (
+        {loading ? (
+          <TableSkeleton columns={isAdmin ? 9 : 8} rows={7} ariaLabel="Cargando historial de cotizaciones..." />
+        ) : cotizaciones.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             No hay cotizaciones registradas para el filtro seleccionado.
           </div>
@@ -112,18 +116,18 @@ export const CotizacionesList = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[750px]">
               <thead>
-                <tr className="bg-[#1F3D3D] text-white">
-                  <th className="p-3 sm:p-4 font-semibold text-xs sm:text-sm">#</th>
-                  <th className="p-3 sm:p-4 font-semibold text-xs sm:text-sm">Código</th>
+                <tr className="bg-brand-primary text-white">
+                  <th scope="col" className="p-3 sm:p-4 font-semibold text-xs sm:text-sm">#</th>
+                  <th scope="col" className="p-3 sm:p-4 font-semibold text-xs sm:text-sm">Código</th>
                   {isAdmin && (
-                    <th className="p-3 sm:p-4 font-semibold text-xs sm:text-sm">Empresa</th>
+                    <th scope="col" className="p-3 sm:p-4 font-semibold text-xs sm:text-sm">Empresa</th>
                   )}
-                  <th className="p-3 sm:p-4 font-semibold text-xs sm:text-sm">Sucursal</th>
-                  <th className="p-3 sm:p-4 font-semibold text-xs sm:text-sm">Cliente</th>
-                  <th className="p-3 sm:p-4 font-semibold text-xs sm:text-sm">Razón Social</th>
-                  <th className="p-3 sm:p-4 font-semibold text-xs sm:text-sm">Fecha</th>
-                  <th className="p-3 sm:p-4 font-semibold text-xs sm:text-sm text-right">Total</th>
-                  <th className="p-3 sm:p-4 font-semibold text-xs sm:text-sm text-center">Acciones</th>
+                  <th scope="col" className="p-3 sm:p-4 font-semibold text-xs sm:text-sm">Sucursal</th>
+                  <th scope="col" className="p-3 sm:p-4 font-semibold text-xs sm:text-sm">Cliente</th>
+                  <th scope="col" className="p-3 sm:p-4 font-semibold text-xs sm:text-sm">Razón Social</th>
+                  <th scope="col" className="p-3 sm:p-4 font-semibold text-xs sm:text-sm">Fecha</th>
+                  <th scope="col" className="p-3 sm:p-4 font-semibold text-xs sm:text-sm text-right">Total</th>
+                  <th scope="col" className="p-3 sm:p-4 font-semibold text-xs sm:text-sm text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -150,10 +154,11 @@ export const CotizacionesList = () => {
                     <td className="p-4 text-center">
                       <button
                         onClick={() => handleVerPdf(cot.id)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#6394EC] text-white text-xs sm:text-sm font-medium rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6394EC] transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-quote-header text-white text-xs sm:text-sm font-medium rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-quote-header transition-colors cursor-pointer"
                         title="Abrir PDF en nueva pestaña"
+                        aria-label={`Ver PDF de la cotización ${cot.codigoCotizacion}`}
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>

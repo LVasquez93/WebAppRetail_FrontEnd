@@ -351,20 +351,20 @@ export const CotizacionForm = () => {
     }
   };
 
-  const inputClasses = "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#1F3D3D] focus:ring-[#1F3D3D] sm:text-sm p-2 border";
+  const inputClasses = "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary sm:text-sm p-2 border";
 
   return (
     <div className="max-w-7xl mx-auto pb-12 px-2 sm:px-4">
       {/* Indicador de Sucursal Activa */}
       {sucursalActiva && (
-        <div className="mb-4 bg-white rounded-xl shadow-sm border-l-4 border-[#1F3D3D] p-3 sm:p-4 flex items-center justify-between">
+        <div className="mb-4 bg-white rounded-xl shadow-sm border-l-4 border-brand-primary p-3 sm:p-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <span className="text-xl">🏢</span>
+            <span className="text-xl" aria-hidden="true">🏢</span>
             <div>
               <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
                 Cotizando para la Sucursal
               </div>
-              <div className="text-sm sm:text-base font-bold text-[#1F3D3D]">
+              <div className="text-sm sm:text-base font-bold text-brand-primary">
                 {sucursalActiva.nombre}
                 <span className="ml-2 text-xs font-normal text-gray-500 hidden sm:inline">
                   ({sucursalActiva.razonSocial})
@@ -442,7 +442,7 @@ export const CotizacionForm = () => {
             type="button"
             onClick={handlePreview}
             disabled={loading}
-            className="w-full sm:w-auto px-6 py-3 bg-gray-500 text-white font-medium rounded-lg shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors disabled:opacity-50 text-center cursor-pointer"
+            className="w-full sm:w-auto px-6 py-3 bg-gray-500 text-white font-medium rounded-lg shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors disabled:opacity-50 text-center cursor-pointer"
           >
             Vista Previa PDF
           </button>
@@ -450,7 +450,7 @@ export const CotizacionForm = () => {
             type="button"
             onClick={handleSubmit(onSubmit)}
             disabled={loading}
-            className="w-full sm:w-auto px-6 py-3 bg-[#1F3D3D] text-white font-medium rounded-lg shadow-sm hover:bg-[#152a2a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1F3D3D] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-center cursor-pointer"
+            className="w-full sm:w-auto px-6 py-3 bg-brand-primary text-white font-semibold rounded-lg shadow-sm hover:bg-brand-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-center cursor-pointer"
           >
             {loading ? 'Guardando...' : 'Guardar Cotización'}
           </button>

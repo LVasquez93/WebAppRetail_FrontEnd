@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ItemCotizacionInput } from '../types/cotizacion.types';
 
 interface GuardarEquiposModalProps {
@@ -16,17 +16,36 @@ export const GuardarEquiposModal: React.FC<GuardarEquiposModalProps> = ({
   onSoloCotizar,
   onGuardarEnBdYCotizar,
 }) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancelar();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onCancelar]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-fadeIn"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancelar();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="guardar-equipos-title"
+        className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4"
+      >
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-700 font-bold text-lg shrink-0">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-700 font-bold text-lg shrink-0" aria-hidden="true">
             ★
           </span>
           <div>
-            <h3 className="text-lg font-bold text-gray-900">
+            <h3 id="guardar-equipos-title" className="text-lg font-bold text-gray-900">
               Equipos Nuevos Detectados
             </h3>
             <p className="text-xs text-gray-600 mt-1">
@@ -73,7 +92,7 @@ export const GuardarEquiposModal: React.FC<GuardarEquiposModalProps> = ({
           <button
             type="button"
             onClick={onGuardarEnBdYCotizar}
-            className="px-4 py-2 text-xs font-semibold text-white bg-[#1F3D3D] hover:bg-[#152a2a] rounded-lg transition-colors flex items-center justify-center gap-1 shadow-sm cursor-pointer"
+            className="px-4 py-2 text-xs font-semibold text-white bg-brand-primary hover:bg-brand-primary-hover rounded-lg transition-colors flex items-center justify-center gap-1 shadow-sm cursor-pointer"
           >
             ✓ Guardar en BD y Crear Cotización
           </button>

@@ -56,6 +56,17 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
     cargarDatos();
   }, [isOpen, usuario?.id]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !guardando) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, guardando, onClose]);
+
   if (!isOpen || !usuario) return null;
 
   const handleTogglePermiso = (codigo: string) => {
@@ -146,16 +157,26 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden flex flex-col max-h-[92vh]">
+    <div
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 animate-fadeIn"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !guardando) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="user-permissions-modal-title"
+        className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden flex flex-col max-h-[92vh]"
+      >
         {/* Cabecera Modal */}
-        <div className="bg-[#1F3D3D] text-white p-5 flex justify-between items-center shrink-0">
+        <div className="bg-brand-primary text-white p-5 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-800 flex items-center justify-center text-xl shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-teal-800 flex items-center justify-center text-xl shadow-md" aria-hidden="true">
               🛡️
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold flex items-center gap-2">
+              <h2 id="user-permissions-modal-title" className="text-base sm:text-lg font-bold flex items-center gap-2">
                 Permisos por Usuario: {usuario.nombreCompleto}
               </h2>
               <div className="flex items-center gap-2 text-xs text-teal-200 mt-0.5">
@@ -172,7 +193,8 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="text-teal-200 hover:text-white text-xl font-bold p-1 cursor-pointer"
+            aria-label="Cerrar modal de permisos"
+            className="text-teal-200 hover:text-white text-xl font-bold p-1 cursor-pointer focus-visible:ring-2 focus-visible:ring-white rounded outline-none"
           >
             ✕
           </button>
@@ -181,8 +203,8 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
         {/* Cuerpo Modal */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1">
           {cargando ? (
-            <div className="py-16 text-center space-y-3">
-              <div className="animate-spin inline-block w-8 h-8 border-4 border-[#1F3D3D] border-t-transparent rounded-full"></div>
+            <div className="py-16 text-center space-y-3" role="status" aria-label="Cargando autorizaciones">
+              <div className="animate-spin inline-block w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full"></div>
               <p className="text-xs text-gray-600 font-semibold">Consultando autorizaciones del colaborador...</p>
             </div>
           ) : (

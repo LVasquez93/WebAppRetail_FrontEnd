@@ -18,17 +18,17 @@ export const UsuariosTable: React.FC<UsuariosTableProps> = ({
 }) => {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse min-w-[700px]">
+      <table className="w-full text-left border-collapse min-w-[700px]" aria-label="Catálogo de Usuarios Emisores">
         <thead>
           <tr className="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider border-b">
-            <th className="p-3 w-12 text-center">#</th>
-            <th className="p-3">Usuario (Código)</th>
-            <th className="p-3">Nombre Completo</th>
-            <th className="p-3">Cargo</th>
-            <th className="p-3">Correo Electrónico</th>
-            <th className="p-3">Rol</th>
-            <th className="p-3">Sucursal Asignada</th>
-            <th className="p-3 w-28 text-center">Acciones</th>
+            <th scope="col" className="p-3 w-12 text-center">#</th>
+            <th scope="col" className="p-3">Usuario (Código)</th>
+            <th scope="col" className="p-3">Nombre Completo</th>
+            <th scope="col" className="p-3">Cargo</th>
+            <th scope="col" className="p-3">Correo Electrónico</th>
+            <th scope="col" className="p-3">Rol</th>
+            <th scope="col" className="p-3">Sucursal Asignada</th>
+            <th scope="col" className="p-3 w-28 text-center">Acciones</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 text-xs sm:text-sm">
@@ -69,7 +69,7 @@ export const UsuariosTable: React.FC<UsuariosTableProps> = ({
                     u.rol === 'ROLE_ADMIN'
                       ? 'bg-purple-100 text-purple-800 border-purple-300 font-bold'
                       : u.rol === 'ROLE_GERENTE_GENERAL'
-                      ? 'bg-teal-100 text-[#1F3D3D] border-teal-300 font-bold'
+                      ? 'bg-teal-100 text-brand-primary border-teal-300 font-bold'
                       : u.rol === 'ROLE_GERENTE_SUCURSAL' || u.rol === 'ROLE_GERENTE'
                       ? 'bg-cyan-100 text-cyan-900 border-cyan-300'
                       : 'bg-amber-100 text-amber-900 border-amber-300'
@@ -89,7 +89,7 @@ export const UsuariosTable: React.FC<UsuariosTableProps> = ({
                       🛡️ Global (SaaS)
                     </span>
                   ) : u.rol === 'ROLE_GERENTE_GENERAL' || !u.sucursalId ? (
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-teal-50 text-[#1F3D3D] border border-teal-200">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-teal-50 text-brand-primary border border-teal-200">
                       🏢 Toda la Empresa
                     </span>
                   ) : (
@@ -104,8 +104,9 @@ export const UsuariosTable: React.FC<UsuariosTableProps> = ({
                       <button
                         type="button"
                         onClick={() => onGestionarPermisos(u)}
-                        className="p-1.5 text-purple-700 hover:bg-purple-100 rounded-lg transition-colors cursor-pointer"
+                        className="p-1.5 text-purple-700 hover:bg-purple-100 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-purple-500 outline-none"
                         title="Gestionar permisos específicos del usuario"
+                        aria-label={`Gestionar permisos de ${u.nombreCompleto || u.username}`}
                       >
                         🛡️
                       </button>
@@ -113,16 +114,18 @@ export const UsuariosTable: React.FC<UsuariosTableProps> = ({
                     <button
                       type="button"
                       onClick={() => onEditar(u)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 outline-none"
                       title="Editar usuario"
+                      aria-label={`Editar usuario ${u.nombreCompleto || u.username}`}
                     >
                       ✏️
                     </button>
                     <button
                       type="button"
                       onClick={() => onEliminar(u.id, u.nombreCompleto || u.username)}
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-red-500 outline-none"
                       title="Eliminar usuario"
+                      aria-label={`Eliminar usuario ${u.nombreCompleto || u.username}`}
                     >
                       🗑️
                     </button>

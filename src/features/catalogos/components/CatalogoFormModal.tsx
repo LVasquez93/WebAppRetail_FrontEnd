@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Sucursal } from '../types/catalogos.types';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -26,21 +26,44 @@ export const CatalogoFormModal: React.FC<CatalogoFormModalProps> = ({
   onClose,
 }) => {
   const { isAdmin, isGerenteGeneral, isGerenteSucursal, user } = useAuth();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !guardando) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, guardando, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden flex flex-col max-h-[90vh]">
+    <div
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 animate-fadeIn"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !guardando) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="catalogo-modal-title"
+        className="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden flex flex-col max-h-[90vh]"
+      >
         {/* Encabezado */}
-        <div className="bg-[#1F3D3D] text-white p-4 flex justify-between items-center">
-          <h2 className="text-base sm:text-lg font-bold">
+        <div className="bg-brand-primary text-white p-4 flex justify-between items-center">
+          <h2 id="catalogo-modal-title" className="text-base sm:text-lg font-bold">
             {registroEdicion ? '✏️ Editar' : '➕ Nuevo'}{' '}
             {tabActiva === 'clientes' ? 'Cliente' : tabActiva === 'equipos' ? 'Equipo' : 'Usuario Emisor'}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-300 hover:text-white text-xl font-bold p-1 cursor-pointer"
+            aria-label="Cerrar modal"
+            className="text-gray-300 hover:text-white text-xl font-bold p-1 cursor-pointer focus-visible:ring-2 focus-visible:ring-white rounded outline-none"
           >
             ✕
           </button>
@@ -51,65 +74,71 @@ export const CatalogoFormModal: React.FC<CatalogoFormModalProps> = ({
           {tabActiva === 'clientes' && (
             <>
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Razón Social *</label>
+                <label htmlFor="cliente-razonSocial" className="block font-semibold text-gray-700 mb-1">Razón Social *</label>
                 <input
+                  id="cliente-razonSocial"
                   type="text"
                   required
                   value={formData.razonSocial || ''}
                   onChange={e => setFormData({ ...formData, razonSocial: e.target.value })}
                   placeholder="Ej: DISTRIBUIDORA DE ALIMENTOS S.A. DE C.V."
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                 />
               </div>
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Nombre Comercial</label>
+                <label htmlFor="cliente-nombreComercial" className="block font-semibold text-gray-700 mb-1">Nombre Comercial</label>
                 <input
+                  id="cliente-nombreComercial"
                   type="text"
                   value={formData.nombreComercial || ''}
                   onChange={e => setFormData({ ...formData, nombreComercial: e.target.value })}
                   placeholder="Ej: ALIMENTOS PREMIUM"
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Contacto Principal</label>
+                  <label htmlFor="cliente-contactoPrincipal" className="block font-semibold text-gray-700 mb-1">Contacto Principal</label>
                   <input
+                    id="cliente-contactoPrincipal"
                     type="text"
                     value={formData.contactoPrincipal || ''}
                     onChange={e => setFormData({ ...formData, contactoPrincipal: e.target.value })}
                     placeholder="Ej: Lic. Tania Argueta"
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Teléfono</label>
+                  <label htmlFor="cliente-telefono" className="block font-semibold text-gray-700 mb-1">Teléfono</label>
                   <input
+                    id="cliente-telefono"
                     type="text"
                     value={formData.telefono || ''}
                     onChange={e => setFormData({ ...formData, telefono: e.target.value })}
                     placeholder="Ej: 2263-0000"
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Correo Electrónico</label>
+                  <label htmlFor="cliente-correo" className="block font-semibold text-gray-700 mb-1">Correo Electrónico</label>
                   <input
+                    id="cliente-correo"
                     type="email"
                     value={formData.correo || ''}
                     onChange={e => setFormData({ ...formData, correo: e.target.value })}
                     placeholder="compras@cliente.com"
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Sucursal Asignada *</label>
+                  <label htmlFor="cliente-sucursalId" className="block font-semibold text-gray-700 mb-1">Sucursal Asignada *</label>
                   <select
+                    id="cliente-sucursalId"
                     value={formData.sucursalId || ''}
                     onChange={e => setFormData({ ...formData, sucursalId: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                   >
                     {sucursales.map(s => (
                       <option key={s.id} value={s.id}>{s.nombre}</option>
@@ -118,13 +147,14 @@ export const CatalogoFormModal: React.FC<CatalogoFormModalProps> = ({
                 </div>
               </div>
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Dirección</label>
+                <label htmlFor="cliente-direccion" className="block font-semibold text-gray-700 mb-1">Dirección</label>
                 <input
+                  id="cliente-direccion"
                   type="text"
                   value={formData.direccion || ''}
                   onChange={e => setFormData({ ...formData, direccion: e.target.value })}
                   placeholder="San Salvador, El Salvador"
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                 />
               </div>
             </>
@@ -133,74 +163,81 @@ export const CatalogoFormModal: React.FC<CatalogoFormModalProps> = ({
           {tabActiva === 'equipos' && (
             <>
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Descripción del Equipo / Producto *</label>
+                <label htmlFor="equipo-descripcion" className="block font-semibold text-gray-700 mb-1">Descripción del Equipo / Producto *</label>
                 <input
+                  id="equipo-descripcion"
                   type="text"
                   required
                   value={formData.descripcion || ''}
                   onChange={e => setFormData({ ...formData, descripcion: e.target.value })}
                   placeholder="Ej: IMPRESORA DE ETIQUETAS ZEBRA ZD220T"
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Part Number (P/N)</label>
+                  <label htmlFor="equipo-partNumber" className="block font-semibold text-gray-700 mb-1">Part Number (P/N)</label>
                   <input
+                    id="equipo-partNumber"
                     type="text"
                     value={formData.partNumber || ''}
                     onChange={e => setFormData({ ...formData, partNumber: e.target.value })}
                     placeholder="Ej: ZCD-800300-250LA"
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Precio Referencial ($)</label>
+                  <label htmlFor="equipo-precioReferencial" className="block font-semibold text-gray-700 mb-1">Precio Referencial ($)</label>
                   <input
+                    id="equipo-precioReferencial"
                     type="number"
                     step="0.01"
                     value={formData.precioReferencial ?? 0}
                     onChange={e => setFormData({ ...formData, precioReferencial: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Tiempo de Entrega</label>
+                  <label htmlFor="equipo-tiempoEntrega" className="block font-semibold text-gray-700 mb-1">Tiempo de Entrega</label>
                   <input
+                    id="equipo-tiempoEntrega"
                     type="text"
                     value={formData.tiempoEntregaPredeterminado || 'De 5 a 6 semanas'}
                     onChange={e => setFormData({ ...formData, tiempoEntregaPredeterminado: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Categoría</label>
+                  <label htmlFor="equipo-categoria" className="block font-semibold text-gray-700 mb-1">Categoría</label>
                   <input
+                    id="equipo-categoria"
                     type="text"
                     value={formData.categoria || 'General'}
                     onChange={e => setFormData({ ...formData, categoria: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                   />
                 </div>
               </div>
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Características Técnicas</label>
+                <label htmlFor="equipo-caracteristicas" className="block font-semibold text-gray-700 mb-1">Características Técnicas</label>
                 <textarea
+                  id="equipo-caracteristicas"
                   rows={3}
                   value={formData.caracteristicas || ''}
                   onChange={e => setFormData({ ...formData, caracteristicas: e.target.value })}
                   placeholder="• Especificación 1&#10;• Especificación 2"
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                 />
               </div>
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Sucursal Asignada *</label>
+                <label htmlFor="equipo-sucursalId" className="block font-semibold text-gray-700 mb-1">Sucursal Asignada *</label>
                 <select
+                  id="equipo-sucursalId"
                   value={formData.sucursalId || ''}
                   onChange={e => setFormData({ ...formData, sucursalId: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                 >
                   {sucursales.map(s => (
                     <option key={s.id} value={s.id}>{s.nombre}</option>
@@ -214,67 +251,73 @@ export const CatalogoFormModal: React.FC<CatalogoFormModalProps> = ({
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Código / Username *</label>
+                  <label htmlFor="usuario-username" className="block font-semibold text-gray-700 mb-1">Código / Username *</label>
                   <input
+                    id="usuario-username"
                     type="text"
                     required
                     value={formData.username || ''}
                     onChange={e => setFormData({ ...formData, username: e.target.value.toUpperCase() })}
                     placeholder="Ej: VENTAS02"
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D] font-mono"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">
+                  <label htmlFor="usuario-password" className="block font-semibold text-gray-700 mb-1">
                     Contraseña {registroEdicion ? '(opcional)' : '*'}
                   </label>
                   <input
+                    id="usuario-password"
                     type="password"
                     required={!registroEdicion}
                     value={formData.password || ''}
                     onChange={e => setFormData({ ...formData, password: e.target.value })}
                     placeholder={registroEdicion ? 'Conservar actual' : 'Mínimo 6 caracteres'}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                   />
                 </div>
               </div>
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Nombre Completo *</label>
+                <label htmlFor="usuario-nombreCompleto" className="block font-semibold text-gray-700 mb-1">Nombre Completo *</label>
                 <input
+                  id="usuario-nombreCompleto"
                   type="text"
                   required
                   value={formData.nombreCompleto || ''}
                   onChange={e => setFormData({ ...formData, nombreCompleto: e.target.value })}
                   placeholder="Ej: Lic. Mauricio Morales"
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Cargo</label>
+                  <label htmlFor="usuario-cargo" className="block font-semibold text-gray-700 mb-1">Cargo</label>
                   <input
+                    id="usuario-cargo"
                     type="text"
                     value={formData.cargo || ''}
                     onChange={e => setFormData({ ...formData, cargo: e.target.value })}
                     placeholder="Ej: Ejecutivo de Cuentas Clave"
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Correo Electrónico</label>
+                  <label htmlFor="usuario-correo" className="block font-semibold text-gray-700 mb-1">Correo Electrónico</label>
                   <input
+                    id="usuario-correo"
                     type="email"
                     value={formData.correo || ''}
                     onChange={e => setFormData({ ...formData, correo: e.target.value })}
                     placeholder="mauricio.morales@retail.com.sv"
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">Rol de Acceso *</label>
+                  <label htmlFor="usuario-rol" className="block font-semibold text-gray-700 mb-1">Rol de Acceso *</label>
                   <select
+                    id="usuario-rol"
                     value={formData.rol || 'ROLE_VENTAS'}
                     onChange={e => {
                       const newRol = e.target.value;
@@ -288,7 +331,7 @@ export const CatalogoFormModal: React.FC<CatalogoFormModalProps> = ({
                         empresaId: newRol === 'ROLE_ADMIN' ? undefined : (user?.empresaId || formData.empresaId),
                       });
                     }}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                   >
                     <option value="ROLE_VENTAS">ROLE_VENTAS (Vendedor / Emisor)</option>
                     {(isAdmin || isGerenteGeneral) && (
@@ -303,7 +346,7 @@ export const CatalogoFormModal: React.FC<CatalogoFormModalProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-gray-700 mb-1">
+                  <label htmlFor="usuario-sucursalId" className="block font-semibold text-gray-700 mb-1">
                     {formData.rol === 'ROLE_ADMIN'
                       ? 'Alcance Operativo'
                       : formData.rol === 'ROLE_GERENTE_GENERAL'
@@ -324,9 +367,10 @@ export const CatalogoFormModal: React.FC<CatalogoFormModalProps> = ({
                     </div>
                   ) : (
                     <select
+                      id="usuario-sucursalId"
                       value={formData.sucursalId || (sucursales[0]?.id || '')}
                       onChange={e => setFormData({ ...formData, sucursalId: Number(e.target.value) })}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary"
                     >
                       {sucursales.map(s => (
                         <option key={s.id} value={s.id}>{s.nombre}</option>
@@ -349,7 +393,7 @@ export const CatalogoFormModal: React.FC<CatalogoFormModalProps> = ({
             <button
               type="submit"
               disabled={guardando}
-              className="px-5 py-2 bg-[#1F3D3D] hover:bg-[#2a5252] text-white rounded-lg font-semibold cursor-pointer shadow-sm disabled:opacity-50 flex items-center gap-1.5"
+              className="px-5 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white rounded-lg font-semibold cursor-pointer shadow-sm disabled:opacity-50 flex items-center gap-1.5"
             >
               {guardando ? 'Guardando...' : 'Guardar Registro'}
             </button>

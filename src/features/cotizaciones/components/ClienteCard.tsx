@@ -40,8 +40,9 @@ export const ClienteCard: React.FC<ClienteCardProps> = ({
       <div className="space-y-4">
         {/* Contacto Principal */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Contacto Principal *</label>
+          <label htmlFor="cot-contactoCliente" className="block text-sm font-medium text-gray-700">Contacto Principal *</label>
           <input
+            id="cot-contactoCliente"
             {...register('contactoCliente', { required: true })}
             autoComplete="off"
             className={inputClasses}
@@ -53,11 +54,12 @@ export const ClienteCard: React.FC<ClienteCardProps> = ({
         {/* Razón Social con Autocompletado Interactivo */}
         <div className="relative">
           <div className="flex justify-between items-center">
-            <label className="block text-sm font-medium text-gray-700">Razón Social *</label>
+            <label htmlFor="cot-razonSocialCliente" className="block text-sm font-medium text-gray-700">Razón Social *</label>
             <span className="text-[11px] text-gray-400">Escribe o selecciona de la lista</span>
           </div>
 
           <input
+            id="cot-razonSocialCliente"
             {...register('razonSocialCliente', { required: true })}
             autoComplete="off"
             className={`${inputClasses} ${mostrarDropdownClientes ? 'ring-2 ring-emerald-600' : ''}`}
@@ -77,7 +79,8 @@ export const ClienteCard: React.FC<ClienteCardProps> = ({
                 <button
                   type="button"
                   onClick={() => setMostrarDropdownClientes(false)}
-                  className="text-gray-400 hover:text-gray-600 font-bold px-1"
+                  aria-label="Cerrar sugerencias"
+                  className="text-gray-400 hover:text-gray-600 font-bold px-1 cursor-pointer"
                 >
                   ✕
                 </button>
@@ -95,7 +98,7 @@ export const ClienteCard: React.FC<ClienteCardProps> = ({
                   </span>
                   <div className="flex items-center gap-2 mt-0.5 text-[11px] text-gray-600">
                     {cli.nombreComercial && (
-                      <span className="text-[#C88D4B] font-medium font-sans">★ {cli.nombreComercial}</span>
+                      <span className="text-brand-accent-text font-semibold font-sans">★ {cli.nombreComercial}</span>
                     )}
                     {cli.contactoPrincipal && (
                       <span className="text-gray-500">Contacto: {cli.contactoPrincipal}</span>
@@ -109,8 +112,9 @@ export const ClienteCard: React.FC<ClienteCardProps> = ({
 
         {/* Nombre Comercial */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Nombre Comercial</label>
+          <label htmlFor="cot-nombreComercial" className="block text-sm font-medium text-gray-700">Nombre Comercial</label>
           <input
+            id="cot-nombreComercial"
             {...register('nombreComercial')}
             autoComplete="off"
             className={inputClasses}

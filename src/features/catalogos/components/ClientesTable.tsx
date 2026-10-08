@@ -16,15 +16,15 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
 }) => {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse min-w-[750px]">
+      <table className="w-full text-left border-collapse min-w-[750px]" aria-label="Catálogo de Clientes">
         <thead>
           <tr className="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider border-b">
-            <th className="p-3 w-12 text-center">#</th>
-            <th className="p-3">Razón Social y Nombre Comercial</th>
-            <th className="p-3">Contacto Principal</th>
-            <th className="p-3">Teléfono / Correo</th>
-            <th className="p-3">Sucursal Asignada</th>
-            <th className="p-3 w-28 text-center">Acciones</th>
+            <th scope="col" className="p-3 w-12 text-center">#</th>
+            <th scope="col" className="p-3">Razón Social y Nombre Comercial</th>
+            <th scope="col" className="p-3">Contacto Principal</th>
+            <th scope="col" className="p-3">Teléfono / Correo</th>
+            <th scope="col" className="p-3">Sucursal Asignada</th>
+            <th scope="col" className="p-3 w-28 text-center">Acciones</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 text-xs sm:text-sm">
@@ -64,18 +64,20 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
                     <button
                       type="button"
                       onClick={() => onEditar(c)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500"
                       title="Editar cliente"
+                      aria-label={`Editar cliente ${c.razonSocial}`}
                     >
-                      ✏️
+                      <span aria-hidden="true">✏️</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => onEliminar(c.id, c.razonSocial)}
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-red-500"
                       title="Eliminar cliente"
+                      aria-label={`Eliminar cliente ${c.razonSocial}`}
                     >
-                      🗑️
+                      <span aria-hidden="true">🗑️</span>
                     </button>
                   </div>
                 </td>

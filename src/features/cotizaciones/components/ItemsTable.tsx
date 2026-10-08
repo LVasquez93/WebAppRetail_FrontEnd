@@ -79,16 +79,16 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
         {/* Tabla Responsiva */}
         <div className="overflow-x-auto -mx-4 sm:mx-0">
           <div className="inline-block min-w-full align-middle">
-            <table className="min-w-full border-collapse">
+            <table className="min-w-full border-collapse" aria-label="Tabla de Equipos e Ítems de Cotización">
               <thead>
-                <tr className="bg-[#6394EC] text-white text-xs sm:text-sm font-semibold uppercase tracking-wider">
-                  <th className="p-2 sm:p-3 text-center w-12 sm:w-16">Item</th>
-                  <th className="p-2 sm:p-3 text-left min-w-[280px]">Descripción / Part Number / Características</th>
-                  <th className="p-2 sm:p-3 text-left w-28 sm:w-36">Entrega</th>
-                  <th className="p-2 sm:p-3 text-center w-20 sm:w-24">Cant.</th>
-                  <th className="p-2 sm:p-3 text-right w-24 sm:w-32">Precio ($)</th>
-                  <th className="p-2 sm:p-3 text-right w-24 sm:w-32">Total ($)</th>
-                  <th className="p-2 sm:p-3 text-center w-12 sm:w-16"></th>
+                <tr className="bg-quote-header text-white text-xs sm:text-sm font-semibold uppercase tracking-wider">
+                  <th scope="col" className="p-2 sm:p-3 text-center w-12 sm:w-16">Item</th>
+                  <th scope="col" className="p-2 sm:p-3 text-left min-w-[280px]">Descripción / Part Number / Características</th>
+                  <th scope="col" className="p-2 sm:p-3 text-left w-28 sm:w-36">Entrega</th>
+                  <th scope="col" className="p-2 sm:p-3 text-center w-20 sm:w-24">Cant.</th>
+                  <th scope="col" className="p-2 sm:p-3 text-right w-24 sm:w-32">Precio ($)</th>
+                  <th scope="col" className="p-2 sm:p-3 text-right w-24 sm:w-32">Total ($)</th>
+                  <th scope="col" className="p-2 sm:p-3 text-center w-12 sm:w-16"><span className="sr-only">Acciones</span></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-xs sm:text-sm">
@@ -230,8 +230,9 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                           <button
                             type="button"
                             onClick={() => remove(index)}
-                            className="text-red-500 hover:text-red-700 p-2 font-bold mt-1 cursor-pointer"
-                            title="Eliminar este ítem"
+                            className="text-red-500 hover:text-red-700 p-2 font-bold mt-1 cursor-pointer focus-visible:ring-2 focus-visible:ring-red-500 rounded outline-none"
+                            title={`Eliminar ítem ${index + 1}`}
+                            aria-label={`Eliminar ítem ${index + 1}`}
                           >
                             ✕
                           </button>
@@ -249,11 +250,14 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
       {/* Bottom Section: Notes & Totals */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-          <h2 className="text-lg font-bold text-gray-800 mb-2">Nota Importante</h2>
+          <label htmlFor="cot-notaImportante" className="text-lg font-bold text-gray-800 mb-2 block">
+            Nota Importante
+          </label>
           <textarea
+            id="cot-notaImportante"
             {...register('notaImportante')}
             rows={4}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#1F3D3D] focus:ring-[#1F3D3D] sm:text-sm p-2 border"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary sm:text-sm p-2 border"
           />
         </div>
 

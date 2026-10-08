@@ -52,42 +52,42 @@ export const LoginView: React.FC = () => {
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
         {/* Encabezado con marca */}
-        <div className="bg-gradient-to-r from-[#1F3D3D] to-[#2a5252] text-white p-8 text-center relative">
-          <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl mx-auto flex items-center justify-center text-3xl mb-3 border border-white/20 shadow-inner">
+        <div className="bg-gradient-to-r from-brand-primary to-brand-primary-hover text-white p-8 text-center relative">
+          <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl mx-auto flex items-center justify-center text-3xl mb-3 border border-white/20 shadow-inner" aria-hidden="true">
             🔐
           </div>
           <h1 className="text-2xl font-black tracking-wide">Retail El Salvador</h1>
-          <p className="text-xs text-[#C88D4B] font-semibold uppercase tracking-wider mt-1">
+          <p className="text-xs text-brand-accent font-semibold uppercase tracking-wider mt-1">
             Sistema de Cotizaciones
           </p>
-          <h6 className="font-black tracking-wide">V 1.0 </h6>
-
+          <h6 className="font-black tracking-wide text-xs text-white/80">V 1.0</h6>
         </div>
 
         {/* Formulario */}
         <div className="p-8">
           {error && (
-            <div className="mb-6 p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2 animate-shake">
-              <span className="text-base">⚠️</span>
+            <div className="mb-6 p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2 animate-shake" role="alert">
+              <span className="text-base" aria-hidden="true">⚠️</span>
               <span>{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+              <label htmlFor="login-username" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                 Usuario
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400" aria-hidden="true">
                   👤
                 </span>
                 <input
+                  id="login-username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toUpperCase())}
                   placeholder="Digita tu usuario o correo electrónico"
-                  className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#1F3D3D] focus:border-transparent uppercase tracking-wider font-semibold text-gray-800 transition-all placeholder:normal-case placeholder:font-normal"
+                  className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent uppercase tracking-wider font-semibold text-gray-800 transition-all placeholder:normal-case placeholder:font-normal"
                   required
                   autoFocus
                 />
@@ -95,25 +95,27 @@ export const LoginView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+              <label htmlFor="login-password" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                 Contraseña
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400" aria-hidden="true">
                   🔑
                 </span>
                 <input
+                  id="login-password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 text-sm rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#1F3D3D] focus:border-transparent text-gray-800 transition-all"
+                  className="w-full pl-10 pr-10 py-2.5 text-sm rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent text-gray-800 transition-all"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 text-xs"
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 text-xs cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-primary rounded"
                 >
                   {showPassword ? 'Ocultar' : 'Ver'}
                 </button>
@@ -123,17 +125,17 @@ export const LoginView: React.FC = () => {
             <button
               type="submit"
               disabled={cargando}
-              className="w-full py-3 bg-[#1F3D3D] hover:bg-[#2a5252] text-white font-bold rounded-xl text-sm transition-all shadow-lg hover:shadow-xl cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-brand-primary hover:bg-brand-primary-hover text-white font-bold rounded-xl text-sm transition-all shadow-lg hover:shadow-xl cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-brand-primary outline-none"
             >
               {cargando ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" role="status" aria-label="Cargando"></div>
                   <span>Iniciando Sesión...</span>
                 </>
               ) : (
                 <>
                   <span>Ingresar al Sistema</span>
-                  <span>→</span>
+                  <span aria-hidden="true">→</span>
                 </>
               )}
             </button>

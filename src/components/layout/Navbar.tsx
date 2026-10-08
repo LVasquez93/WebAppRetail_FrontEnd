@@ -268,7 +268,7 @@ export const Navbar = () => {
                         <Link
                           to="/sucursales"
                           onClick={() => setDropdownOpen(false)}
-                          className="block text-center text-[11px] text-[#C88D4B] hover:text-[#b0783b] font-medium py-1"
+                          className="block text-center text-[11px] text-brand-accent-text hover:text-brand-accent font-semibold py-1"
                         >
                           ⚙️ Administrar Sucursales y Membretes
                         </Link>

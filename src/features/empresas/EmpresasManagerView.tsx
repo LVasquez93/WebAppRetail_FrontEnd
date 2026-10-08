@@ -342,7 +342,7 @@ export const EmpresasManagerView: React.FC = () => {
 
               {/* Sección 2: Cuenta de Gerente (Crear o Editar) */}
               <div className="space-y-3 pt-2">
-                <h3 className="text-sm font-bold text-[#C88D4B] uppercase tracking-wide border-b pb-1">
+                <h3 className="text-sm font-bold text-brand-accent-text uppercase tracking-wide border-b pb-1">
                   👤 {empresaEditando ? 'Cuenta de Gerente de la Empresa' : 'Cuenta Inicial de Gerente (Dueño / Administrador)'}
                 </h3>
                 <p className="text-xs text-gray-500">

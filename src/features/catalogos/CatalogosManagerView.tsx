@@ -15,6 +15,7 @@ import { CatalogoFormModal } from './components/CatalogoFormModal';
 import { BatchImportModal } from './components/BatchImportModal';
 import { ConfirmDeleteModal } from './components/ConfirmDeleteModal';
 import { UserPermissionsModal } from '../rbac/components/UserPermissionsModal';
+import { TableSkeleton } from '../../components/common/skeletons/TableSkeleton';
 import { useAuth } from '../../context/AuthContext';
 
 export const CatalogosManagerView: React.FC = () => {
@@ -492,34 +493,33 @@ export const CatalogosManagerView: React.FC = () => {
           )}
         </form>
 
-        {/* Botones de Acción */}
+        {/* Botones de Acción (Jerarquía visual según Ley de Hick) */}
         <div className="flex items-center gap-2 w-full md:w-auto justify-end">
           <button
             type="button"
             onClick={handleAbrirLote}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs sm:text-sm font-semibold transition-colors shadow-sm cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-lg text-xs sm:text-sm font-semibold transition-colors shadow-xs cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-primary"
             title="Importar múltiples registros mediante archivo CSV o texto tabulado"
+            aria-label="Cargar registros masivamente por lote"
           >
-            <span>📥</span> Cargar por Lote
+            <span aria-hidden="true">📥</span> Cargar por Lote
           </button>
 
           <button
             type="button"
             onClick={handleNuevo}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-[#1F3D3D] hover:bg-[#2a5252] text-white rounded-lg text-xs sm:text-sm font-semibold transition-colors shadow-sm cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white rounded-lg text-xs sm:text-sm font-bold transition-all shadow-sm hover:shadow-md cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-primary"
+            aria-label={`Crear nuevo ${tabActiva === 'clientes' ? 'cliente' : tabActiva === 'equipos' ? 'equipo' : 'usuario'}`}
           >
-            <span>+</span> Nuevo {tabActiva === 'clientes' ? 'Cliente' : tabActiva === 'equipos' ? 'Equipo' : 'Usuario'}
+            <span aria-hidden="true">+</span> Nuevo {tabActiva === 'clientes' ? 'Cliente' : tabActiva === 'equipos' ? 'Equipo' : 'Usuario'}
           </button>
         </div>
       </div>
 
-      {/* Tabla de Registros Modular */}
+      {/* Tabla de Registros Modular con Skeleton Loader */}
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
         {cargando ? (
-          <div className="p-12 text-center text-gray-500">
-            <div className="animate-spin inline-block w-8 h-8 border-4 border-[#1F3D3D] border-t-transparent rounded-full mb-3"></div>
-            <p className="text-sm font-medium">Cargando registros...</p>
-          </div>
+          <TableSkeleton columns={6} rows={7} ariaLabel="Cargando registros del catálogo..." />
         ) : tabActiva === 'clientes' ? (
           <ClientesTable
             clientes={clientes}

@@ -28,8 +28,9 @@ export const CotizacionMetadataCard: React.FC<CotizacionMetadataCardProps> = ({
       <div className="space-y-4">
         {/* Fecha de Emisión */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Fecha de Emisión *</label>
+          <label htmlFor="cot-fechaEmision" className="block text-sm font-medium text-gray-700">Fecha de Emisión *</label>
           <input
+            id="cot-fechaEmision"
             type="date"
             {...register('fechaEmision', { required: true })}
             autoComplete="off"
@@ -41,7 +42,7 @@ export const CotizacionMetadataCard: React.FC<CotizacionMetadataCardProps> = ({
         {/* Emisor con RBAC */}
         <div>
           <div className="flex justify-between items-center">
-            <label className="block text-sm font-medium text-gray-700">Emisor *</label>
+            <label htmlFor="cot-usuarioEmisor" className="block text-sm font-medium text-gray-700">Emisor *</label>
             {isAdminOrGerente && usuarios.length > 0 ? (
               <span className="text-[11px] text-blue-700 font-medium bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
                 Emisores en BD ({usuarios.length})
@@ -56,6 +57,7 @@ export const CotizacionMetadataCard: React.FC<CotizacionMetadataCardProps> = ({
           {isAdminOrGerente && usuarios.length > 0 ? (
             <div className="mt-1">
               <select
+                id="cot-usuarioEmisor"
                 value={usuarioEmisorValor}
                 onChange={(e) => setValue('usuarioEmisor', e.target.value)}
                 className={inputClasses}
@@ -73,6 +75,7 @@ export const CotizacionMetadataCard: React.FC<CotizacionMetadataCardProps> = ({
           ) : (
             <div className="mt-1">
               <input
+                id="cot-usuarioEmisor"
                 {...register('usuarioEmisor', { required: true })}
                 autoComplete="off"
                 className={`${inputClasses} bg-gray-50 font-medium text-gray-800`}
@@ -86,8 +89,9 @@ export const CotizacionMetadataCard: React.FC<CotizacionMetadataCardProps> = ({
 
         {/* Forma de Pago */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Forma de Pago *</label>
+          <label htmlFor="cot-formaPago" className="block text-sm font-medium text-gray-700">Forma de Pago *</label>
           <input
+            id="cot-formaPago"
             {...register('formaPago', { required: true })}
             autoComplete="off"
             className={inputClasses}

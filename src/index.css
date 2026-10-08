@@ -1,1 +1,21 @@
 @import "tailwindcss";
+
+@theme {
+  /* Design Tokens de Marca (Retail ERP) */
+  --color-brand-primary: #1F3D3D;
+  --color-brand-primary-hover: #2a5252;
+  --color-brand-primary-dark: #132828;
+  --color-brand-accent: #C88D4B;
+  --color-brand-accent-hover: #b0783b;
+  --color-brand-accent-text: #966023; /* Ratio de contraste accesible sobre fondos blancos (4.6:1 WCAG AA) */
+
+  /* Design Tokens de Cotizaciones & Documentos */
+  --color-quote-header: #6394EC;
+  --color-quote-cell: #ACD7E6;
+  --color-quote-total: #FFE3E7;
+  --color-quote-maroon: #800000;
+
+  /* Design Tokens de Superficie y Elevación */
+  --radius-card: 1rem;
+  --radius-button: 0.75rem;
+}

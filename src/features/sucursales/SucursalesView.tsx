@@ -184,10 +184,27 @@ export const SucursalesView: React.FC = () => {
 
   if (cargandoSucursales && sucursales.length === 0) {
     return (
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className="bg-white rounded-xl shadow-md p-12 text-center border-l-4 border-[#1F3D3D]">
-          <div className="animate-spin inline-block w-8 h-8 border-4 border-[#1F3D3D] border-t-transparent rounded-full mb-3"></div>
-          <p className="text-gray-700 font-medium">Cargando información de sucursales...</p>
+      <div className="max-w-5xl mx-auto space-y-6" role="status" aria-label="Cargando configuración de sucursales">
+        <span className="sr-only">Cargando información de sucursales...</span>
+        {/* Header Skeleton */}
+        <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-brand-primary animate-pulse space-y-3">
+          <div className="h-6 w-72 bg-gray-200 rounded"></div>
+          <div className="h-4 w-96 bg-gray-200 rounded"></div>
+        </div>
+        {/* Tabs Skeleton */}
+        <div className="flex gap-2 border-b border-gray-200 pb-1 animate-pulse">
+          <div className="h-10 w-32 bg-gray-200 rounded-t-lg"></div>
+          <div className="h-10 w-32 bg-gray-200 rounded-t-lg"></div>
+        </div>
+        {/* Form Card Skeleton */}
+        <div className="bg-white rounded-xl shadow-md p-6 animate-pulse space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="h-10 bg-gray-100 rounded-lg"></div>
+            <div className="h-10 bg-gray-100 rounded-lg"></div>
+            <div className="h-10 bg-gray-100 rounded-lg"></div>
+            <div className="h-10 bg-gray-100 rounded-lg"></div>
+          </div>
+          <div className="h-28 bg-gray-100 rounded-lg"></div>
         </div>
       </div>
     );
