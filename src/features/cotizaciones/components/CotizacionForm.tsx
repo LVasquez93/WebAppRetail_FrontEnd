@@ -77,9 +77,9 @@ export const CotizacionForm = () => {
     const sucursalId = sucursalActiva?.id;
     const targetEmpresaId = sucursalActiva?.empresaId || user?.empresaId;
 
-    clientesApi.listarOBuscar(undefined, sucursalId, targetEmpresaId).then(data => {
-      setClientes(data);
-      setClientesSugeridos(data);
+    clientesApi.listarOBuscar(undefined, sucursalId, targetEmpresaId, 0, 100).then(data => {
+      setClientes(data.content);
+      setClientesSugeridos(data.content);
     }).catch(console.error);
 
     if (user?.username) {
@@ -87,13 +87,13 @@ export const CotizacionForm = () => {
     }
 
     if (isAdminOrGerente) {
-      usuariosApi.listarOBuscar(undefined, targetEmpresaId).then(data => {
-        setUsuarios(data);
+      usuariosApi.listarOBuscar(undefined, targetEmpresaId, undefined, 0, 100).then(data => {
+        setUsuarios(data.content);
       }).catch(console.error);
     }
 
-    equiposApi.listarOBuscar(undefined, sucursalId, targetEmpresaId).then(data => {
-      setEquiposCatalogo(data);
+    equiposApi.listarOBuscar(undefined, sucursalId, targetEmpresaId, 0, 100).then(data => {
+      setEquiposCatalogo(data.content);
     }).catch(console.error);
 
     // Ajustar condiciones comerciales y notas por defecto según la sucursal activa
@@ -331,8 +331,8 @@ export const CotizacionForm = () => {
           categoria: 'General'
         });
       }
-      const actualizados = await equiposApi.listarOBuscar(undefined, sucursalActiva?.id, targetEmpresaId);
-      setEquiposCatalogo(actualizados);
+      const actualizados = await equiposApi.listarOBuscar(undefined, sucursalActiva?.id, targetEmpresaId, 0, 100);
+      setEquiposCatalogo(actualizados.content);
     } catch (err) {
       console.error('Error guardando equipos nuevos en el catálogo:', err);
     } finally {

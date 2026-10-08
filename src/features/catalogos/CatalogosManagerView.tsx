@@ -31,6 +31,12 @@ export const CatalogosManagerView: React.FC = () => {
   const [equipos, setEquipos] = useState<Equipo[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
 
+  // Estados de Paginación
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
   // Filtros
   const [busqueda, setBusqueda] = useState('');
   const [sucursalFiltro, setSucursalFiltro] = useState<number | 'TODAS'>(() => {
@@ -79,8 +85,8 @@ export const CatalogosManagerView: React.FC = () => {
     setTimeout(() => setToastMensaje(null), 3500);
   };
 
-  // Carga de datos
-  const cargarDatos = async () => {
+  // Carga de datos con paginación
+  const cargarDatos = async (targetPage = page, targetSize = pageSize) => {
     try {
       setCargando(true);
       const sId = isBranchLocked && user?.sucursalId
@@ -90,25 +96,31 @@ export const CatalogosManagerView: React.FC = () => {
       const empId = targetEmpresaId;
 
       if (tabActiva === 'clientes') {
-        const data = await clientesApi.listarOBuscar(q, sId, empId);
-        setClientes(data);
+        const data = await clientesApi.listarOBuscar(q, sId, empId, targetPage, targetSize);
+        setClientes(data.content);
+        setTotalPages(data.totalPages);
+        setTotalElements(data.totalElements);
       } else if (tabActiva === 'equipos') {
-        const data = await equiposApi.listarOBuscar(q, sId, empId);
-        setEquipos(data);
+        const data = await equiposApi.listarOBuscar(q, sId, empId, targetPage, targetSize);
+        setEquipos(data.content);
+        setTotalPages(data.totalPages);
+        setTotalElements(data.totalElements);
       } else {
-        let data: Usuario[] = [];
+        let data;
         if (isAdmin) {
           if (filtroTipoUsuario === 'ADMINS') {
-            data = await usuariosApi.listarOBuscar(q, undefined, true);
+            data = await usuariosApi.listarOBuscar(q, undefined, true, targetPage, targetSize);
           } else if (filtroTipoUsuario === 'TODOS') {
-            data = await usuariosApi.listarOBuscar(q, undefined, undefined);
+            data = await usuariosApi.listarOBuscar(q, undefined, undefined, targetPage, targetSize);
           } else {
-            data = await usuariosApi.listarOBuscar(q, empId);
+            data = await usuariosApi.listarOBuscar(q, empId, undefined, targetPage, targetSize);
           }
         } else {
-          data = await usuariosApi.listarOBuscar(q, empId);
+          data = await usuariosApi.listarOBuscar(q, empId, undefined, targetPage, targetSize);
         }
-        setUsuarios(data);
+        setUsuarios(data.content);
+        setTotalPages(data.totalPages);
+        setTotalElements(data.totalElements);
       }
     } catch (error) {
       console.error('Error al cargar datos del catálogo:', error);
@@ -117,13 +129,19 @@ export const CatalogosManagerView: React.FC = () => {
     }
   };
 
+  // Reiniciar página a 0 cuando cambian los filtros principales o pestaña
   useEffect(() => {
-    cargarDatos();
+    setPage(0);
   }, [tabActiva, sucursalFiltro, targetEmpresaId, filtroTipoUsuario]);
+
+  useEffect(() => {
+    cargarDatos(page, pageSize);
+  }, [tabActiva, sucursalFiltro, targetEmpresaId, filtroTipoUsuario, page, pageSize]);
 
   const handleBuscar = (e: React.FormEvent) => {
     e.preventDefault();
-    cargarDatos();
+    setPage(0);
+    cargarDatos(0, pageSize);
   };
 
   // Abrir Modal para Nuevo Registro
@@ -524,6 +542,61 @@ export const CatalogosManagerView: React.FC = () => {
             onEliminar={confirmarEliminar}
             onGestionarPermisos={handleGestionarPermisos}
           />
+        )}
+
+        {/* Barra de Controles de Paginación */}
+        {!cargando && totalElements > 0 && (
+          <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-gray-600">
+            <div className="flex items-center gap-3">
+              <span>
+                Mostrando <strong className="text-gray-900">{page * pageSize + 1}</strong> a{' '}
+                <strong className="text-gray-900">{Math.min((page + 1) * pageSize, totalElements)}</strong> de{' '}
+                <strong className="text-gray-900">{totalElements}</strong> registros
+              </span>
+              <span className="text-gray-300">|</span>
+              <label className="flex items-center gap-1.5 text-xs text-gray-500">
+                <span>Por página:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    const newSize = Number(e.target.value);
+                    setPageSize(newSize);
+                    setPage(0);
+                  }}
+                  className="border border-gray-300 rounded px-2 py-1 bg-white text-gray-800 text-xs focus:ring-1 focus:ring-[#1F3D3D] cursor-pointer"
+                >
+                  <option value={10}>10</option>
+                  <option value={15}>15</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </select>
+              </label>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  className="px-3 py-1.5 border border-gray-300 rounded-md text-xs font-semibold bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                >
+                  ← Anterior
+                </button>
+                <span className="px-2 text-xs font-semibold text-gray-700">
+                  Página {page + 1} de {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  disabled={page >= totalPages - 1}
+                  className="px-3 py-1.5 border border-gray-300 rounded-md text-xs font-semibold bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                >
+                  Siguiente →
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

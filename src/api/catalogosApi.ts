@@ -1,13 +1,29 @@
 import axiosClient from './axiosClient';
 import { Cliente, Usuario, Equipo } from '../features/catalogos/types/catalogos.types';
 
+export interface PageResponse<T> {
+  content: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+  first: boolean;
+}
+
 export const clientesApi = {
-  listarOBuscar: async (query?: string, sucursalId?: number, empresaId?: number): Promise<Cliente[]> => {
-    const params: Record<string, any> = {};
+  listarOBuscar: async (
+    query?: string,
+    sucursalId?: number,
+    empresaId?: number,
+    page: number = 0,
+    size: number = 10
+  ): Promise<PageResponse<Cliente>> => {
+    const params: Record<string, any> = { page, size };
     if (query) params.q = query;
     if (sucursalId) params.sucursalId = sucursalId;
     if (empresaId) params.empresaId = empresaId;
-    const response = await axiosClient.get<Cliente[]>('/clientes', { params });
+    const response = await axiosClient.get<PageResponse<Cliente>>('/clientes', { params });
     return response.data;
   },
 
@@ -37,12 +53,18 @@ export const clientesApi = {
 };
 
 export const usuariosApi = {
-  listarOBuscar: async (query?: string, empresaId?: number, soloAdmins?: boolean): Promise<Usuario[]> => {
-    const params: Record<string, any> = {};
+  listarOBuscar: async (
+    query?: string,
+    empresaId?: number,
+    soloAdmins?: boolean,
+    page: number = 0,
+    size: number = 10
+  ): Promise<PageResponse<Usuario>> => {
+    const params: Record<string, any> = { page, size };
     if (query) params.q = query;
     if (empresaId) params.empresaId = empresaId;
     if (soloAdmins !== undefined) params.soloAdmins = soloAdmins;
-    const response = await axiosClient.get<Usuario[]>('/usuarios', { params });
+    const response = await axiosClient.get<PageResponse<Usuario>>('/usuarios', { params });
     return response.data;
   },
 
@@ -72,12 +94,18 @@ export const usuariosApi = {
 };
 
 export const equiposApi = {
-  listarOBuscar: async (query?: string, sucursalId?: number, empresaId?: number): Promise<Equipo[]> => {
-    const params: Record<string, any> = {};
+  listarOBuscar: async (
+    query?: string,
+    sucursalId?: number,
+    empresaId?: number,
+    page: number = 0,
+    size: number = 10
+  ): Promise<PageResponse<Equipo>> => {
+    const params: Record<string, any> = { page, size };
     if (query) params.q = query;
     if (sucursalId) params.sucursalId = sucursalId;
     if (empresaId) params.empresaId = empresaId;
-    const response = await axiosClient.get<Equipo[]>('/equipos', { params });
+    const response = await axiosClient.get<PageResponse<Equipo>>('/equipos', { params });
     return response.data;
   },
 

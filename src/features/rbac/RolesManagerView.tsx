@@ -53,8 +53,8 @@ export const RolesManagerView: React.FC = () => {
     try {
       setCargandoUsuarios(true);
       const empId = isAdmin ? empresaSeleccionada?.id : user?.empresaId;
-      const data = await usuariosApi.listarOBuscar(undefined, empId);
-      setUsuarios(data);
+      const data = await usuariosApi.listarOBuscar(undefined, empId, undefined, 0, 100);
+      setUsuarios(data.content);
     } catch (err: any) {
       console.error('Error al cargar lista de usuarios para RBAC:', err);
     } finally {

@@ -207,6 +207,12 @@ En [BatchImportModal.tsx](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetai
 - Parsea y valida los registros en tiempo real en el navegador antes de enviar la petición.
 - Realiza el envío en un único payload a `/api/v1/{clientes|equipos}/lote` asignando automáticamente la `sucursalId` activa.
 
+### 5. Paginación de Alto Rendimiento en Catálogos
+Para garantizar un renderizado fluido y evitar cargar miles de filas en memoria:
+- **API Client**: [`catalogosApi.ts`](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/api/catalogosApi.ts) implementa la interfaz genérica `PageResponse<T>` (`content`, `pageNumber`, `pageSize`, `totalElements`, `totalPages`, `first`, `last`).
+- **Vista de Catálogos**: [`CatalogosManagerView.tsx`](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/catalogos/CatalogosManagerView.tsx) gestiona `page` y `pageSize` dinámicamente con selectores de tamaño (10, 15, 25, 50 registros por página), botones Anterior/Siguiente y etiquetas descriptivas *"Mostrando X a Y de Z registros"*.
+- **Emisión de Cotizaciones**: [`CotizacionForm.tsx`](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/cotizaciones/components/CotizacionForm.tsx) precarga de forma acotada (`size = 100`) los registros más recientes evitando sobrecargar el DOM.
+
 ---
 
 ## 7. Configuración de Entornos (Localhost vs. Cloudflare Pages)
