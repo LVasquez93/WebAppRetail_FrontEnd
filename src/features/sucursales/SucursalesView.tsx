@@ -30,6 +30,14 @@ export const SucursalesView: React.FC = () => {
     cargoFirmante: '',
     formaPagoPredeterminada: 'Contado contra entrega / Transferencia Bancaria',
     notaPredeterminada: '** IMPORTANTE ** Precios sujetos a inventario.',
+    porcentajeIva: 13,
+    monedaCodigo: 'USD',
+    monedaSimbolo: '$',
+    monedaNombre: 'DOLARES',
+    diasValidezCotizacion: 15,
+    tiempoEntregaPredeterminado: 'De 5 a 6 semanas',
+    garantiaPredeterminada: '1 año contra defectos de fábrica',
+    mostrarIvaDesglosado: true,
     activo: true,
   });
 
@@ -40,7 +48,17 @@ export const SucursalesView: React.FC = () => {
   // Sincronizar formulario cada vez que cambie la sucursal seleccionada
   useEffect(() => {
     if (branchSeleccionada) {
-      setFormData({ ...branchSeleccionada });
+      setFormData({
+        ...branchSeleccionada,
+        porcentajeIva: branchSeleccionada.porcentajeIva !== undefined ? branchSeleccionada.porcentajeIva : 13,
+        monedaCodigo: branchSeleccionada.monedaCodigo || 'USD',
+        monedaSimbolo: branchSeleccionada.monedaSimbolo || '$',
+        monedaNombre: branchSeleccionada.monedaNombre || 'DOLARES',
+        diasValidezCotizacion: branchSeleccionada.diasValidezCotizacion !== undefined ? branchSeleccionada.diasValidezCotizacion : 15,
+        tiempoEntregaPredeterminado: branchSeleccionada.tiempoEntregaPredeterminado || 'De 5 a 6 semanas',
+        garantiaPredeterminada: branchSeleccionada.garantiaPredeterminada || '1 año contra defectos de fábrica',
+        mostrarIvaDesglosado: branchSeleccionada.mostrarIvaDesglosado !== false,
+      });
     }
   }, [branchSeleccionada?.id]);
 
@@ -390,7 +408,235 @@ export const SucursalesView: React.FC = () => {
             </div>
           </div>
 
-          {/* Tarjeta 2: Firmante y Condiciones Predeterminadas */}
+          {/* Tarjeta 2: Configuración Fiscal, Moneda y Parámetros Comerciales */}
+          <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-2 gap-2">
+              <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <span>⚙️</span> Configuración Fiscal, Moneda y Parámetros Comerciales
+              </h2>
+              <span className="text-xs text-gray-500">
+                Afecta directamente los cálculos, monedas y leyendas de las cotizaciones emitidas en esta sede.
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Tasa de IVA */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Tasa de IVA / Impuesto (%) *
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    required
+                    value={formData.porcentajeIva !== undefined ? formData.porcentajeIva : 13}
+                    onChange={e => handleInputChange('porcentajeIva', Number(e.target.value))}
+                    className="w-full px-3 py-2 pr-8 border rounded-lg text-sm font-bold text-blue-900 focus:ring-2 focus:ring-[#1F3D3D]"
+                    placeholder="13.00"
+                  />
+                  <span className="absolute right-3 top-2 text-xs font-bold text-gray-400 pointer-events-none">%</span>
+                </div>
+                <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                  <span className="text-[10px] text-gray-500">Presets:</span>
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange('porcentajeIva', 13)}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold cursor-pointer"
+                  >
+                    13% (El Salvador)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange('porcentajeIva', 12)}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold cursor-pointer"
+                  >
+                    12% (Guatemala)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange('porcentajeIva', 15)}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold cursor-pointer"
+                  >
+                    15% (Honduras/Nic)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange('porcentajeIva', 0)}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold cursor-pointer"
+                  >
+                    0% (Exento)
+                  </button>
+                </div>
+              </div>
+
+              {/* Moneda Código & Símbolo */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Código de Moneda (ISO) *
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    required
+                    value={formData.monedaCodigo || 'USD'}
+                    onChange={e => handleInputChange('monedaCodigo', e.target.value.toUpperCase())}
+                    className="w-full px-3 py-2 border rounded-lg text-sm font-mono font-bold text-gray-800 uppercase focus:ring-2 focus:ring-[#1F3D3D]"
+                    placeholder="USD"
+                  />
+                  <input
+                    type="text"
+                    required
+                    value={formData.monedaSimbolo || '$'}
+                    onChange={e => handleInputChange('monedaSimbolo', e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg text-sm font-bold text-center text-teal-800 focus:ring-2 focus:ring-[#1F3D3D]"
+                    placeholder="Símbolo: $"
+                    title="Símbolo impreso en los totales y precios"
+                  />
+                </div>
+                <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                  <span className="text-[10px] text-gray-500">Monedas:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleInputChange('monedaCodigo', 'USD');
+                      handleInputChange('monedaSimbolo', '$');
+                      handleInputChange('monedaNombre', 'DOLARES');
+                    }}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-teal-50 hover:bg-teal-100 text-[#1F3D3D] font-bold cursor-pointer"
+                  >
+                    $ USD
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleInputChange('monedaCodigo', 'GTQ');
+                      handleInputChange('monedaSimbolo', 'Q');
+                      handleInputChange('monedaNombre', 'QUETZALES');
+                    }}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-teal-50 hover:bg-teal-100 text-[#1F3D3D] font-bold cursor-pointer"
+                  >
+                    Q Quetzal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleInputChange('monedaCodigo', 'HNL');
+                      handleInputChange('monedaSimbolo', 'L');
+                      handleInputChange('monedaNombre', 'LEMPIRAS');
+                    }}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-teal-50 hover:bg-teal-100 text-[#1F3D3D] font-bold cursor-pointer"
+                  >
+                    L Lempira
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleInputChange('monedaCodigo', 'EUR');
+                      handleInputChange('monedaSimbolo', '€');
+                      handleInputChange('monedaNombre', 'EUROS');
+                    }}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-teal-50 hover:bg-teal-100 text-[#1F3D3D] font-bold cursor-pointer"
+                  >
+                    € Euro
+                  </button>
+                </div>
+              </div>
+
+              {/* Nombre de Moneda para Total en Letras */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Nombre de Moneda (Monto en Letras) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.monedaNombre || 'DOLARES'}
+                  onChange={e => handleInputChange('monedaNombre', e.target.value.toUpperCase())}
+                  className="w-full px-3 py-2 border rounded-lg text-sm font-semibold uppercase focus:ring-2 focus:ring-[#1F3D3D]"
+                  placeholder="DOLARES"
+                />
+                <span className="text-[11px] text-gray-500 block mt-1">
+                  Ej: "DOSCIENTOS <strong>{formData.monedaNombre || 'DOLARES'}</strong> CON 08/100"
+                </span>
+              </div>
+
+              {/* Días de Validez de la Oferta */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Validez de la Oferta (Días)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    max="365"
+                    value={formData.diasValidezCotizacion !== undefined ? formData.diasValidezCotizacion : 15}
+                    onChange={e => handleInputChange('diasValidezCotizacion', Number(e.target.value))}
+                    className="w-full px-3 py-2 pr-12 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                    placeholder="15"
+                  />
+                  <span className="absolute right-3 top-2 text-xs font-bold text-gray-400 pointer-events-none">días</span>
+                </div>
+                <span className="text-[11px] text-gray-500 block mt-1">
+                  Impreso en el PDF: "Validez de la oferta: {formData.diasValidezCotizacion || 15} días calendario".
+                </span>
+              </div>
+
+              {/* Tiempo de Entrega Predeterminado */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Tiempo de Entrega Predeterminado
+                </label>
+                <input
+                  type="text"
+                  value={formData.tiempoEntregaPredeterminado || ''}
+                  onChange={e => handleInputChange('tiempoEntregaPredeterminado', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                  placeholder="De 5 a 6 semanas"
+                />
+                <span className="text-[11px] text-gray-500 block mt-1">
+                  Valor sugerido en nuevas líneas de cotización.
+                </span>
+              </div>
+
+              {/* Garantía Predeterminada */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Garantía Predeterminada
+                </label>
+                <input
+                  type="text"
+                  value={formData.garantiaPredeterminada || ''}
+                  onChange={e => handleInputChange('garantiaPredeterminada', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
+                  placeholder="1 año contra defectos de fábrica"
+                />
+                <span className="text-[11px] text-gray-500 block mt-1">
+                  Leyenda en la sección de condiciones del PDF.
+                </span>
+              </div>
+
+              {/* Toggle: Mostrar IVA Desglosado */}
+              <div className="md:col-span-3 pt-1">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={formData.mostrarIvaDesglosado !== false}
+                    onChange={e => handleInputChange('mostrarIvaDesglosado', e.target.checked)}
+                    className="w-4 h-4 text-[#1F3D3D] rounded border-gray-300 focus:ring-[#1F3D3D]"
+                  />
+                  <span className="text-xs font-bold text-gray-800">
+                    Desglosar fila de IVA en cotizaciones y documentos PDF
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Tarjeta 3: Firmante y Condiciones Predeterminadas */}
           <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
             <h2 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2 flex items-center gap-2">
               <span>✍️</span> Firmante y Condiciones de Venta
@@ -746,6 +992,52 @@ export const SucursalesView: React.FC = () => {
                     placeholder="GERENTE DE SUCURSAL"
                     className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#1F3D3D]"
                   />
+                </div>
+
+                {/* Configuración Fiscal y Moneda inicial */}
+                <div className="sm:col-span-2 pt-2 border-t border-gray-100">
+                  <p className="text-xs font-bold text-gray-800 mb-2 flex items-center gap-1.5">
+                    <span>⚙️</span> Configuración Fiscal y Moneda
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-600 mb-1">IVA (%)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={nuevaSucursal.porcentajeIva ?? 13}
+                        onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, porcentajeIva: parseFloat(e.target.value) || 0 })}
+                        className="w-full px-2 py-1.5 border rounded-lg text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-600 mb-1">Moneda (ISO)</label>
+                      <input
+                        type="text"
+                        value={nuevaSucursal.monedaCodigo || 'USD'}
+                        onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, monedaCodigo: e.target.value.toUpperCase() })}
+                        className="w-full px-2 py-1.5 border rounded-lg text-xs uppercase"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-600 mb-1">Símbolo</label>
+                      <input
+                        type="text"
+                        value={nuevaSucursal.monedaSimbolo || '$'}
+                        onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, monedaSimbolo: e.target.value })}
+                        className="w-full px-2 py-1.5 border rounded-lg text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-600 mb-1">Validez (Días)</label>
+                      <input
+                        type="number"
+                        value={nuevaSucursal.diasValidezCotizacion ?? 15}
+                        onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, diasValidezCotizacion: parseInt(e.target.value) || 15 })}
+                        className="w-full px-2 py-1.5 border rounded-lg text-xs"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 

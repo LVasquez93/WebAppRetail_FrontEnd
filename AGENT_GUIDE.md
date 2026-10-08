@@ -70,8 +70,10 @@ src/
     │   └── LoginView.tsx              # Vista de autenticación y login con credenciales
     │
     ├── rbac/                          # Módulo Roles y Permisos Dinámicos (RBAC)
-    │   ├── RolesManagerView.tsx       # Matriz interactiva de permisos por rol con herencia en cascada y presets
-    │   └── types/rbac.types.ts
+    │   ├── RolesManagerView.tsx       # Doble vista: Permisos Especiales por Usuario y Matriz de Roles Base
+    │   ├── components/
+    │   │   └── UserPermissionsModal.tsx # Modal interactivo para otorgar/revocar permisos individuales por colaborador
+    │   └── types/rbac.types.ts        # Interfaces RbacMatriz, RolPermisos, UsuarioPermisos, etc.
     │
     ├── empresas/                      # Módulo Multi-Empresa (Exclusivo SuperAdmin)
     │   ├── EmpresasManagerView.tsx    # Listado, creación, edición, alternancia de estado y gestión de Gerentes
@@ -150,25 +152,40 @@ src/
 2. **Edición y Gestión de Administradores Globales (SaaS)**:
    - **Desde Catálogos (`CatalogosManagerView.tsx`)**: Los administradores disponen de un selector de alcance en la pestaña *Usuarios* para alternar entre "Usuarios Empresa", "🛡️ Administradores Globales SaaS" (`soloAdmins=true`) y "Todos los Usuarios". Los administradores creados o editados mantienen alcance global (`empresaId = null`, `sucursalId = null`).
    - **Desde la Barra Superior (`Navbar.tsx`)**: Cualquier usuario autenticado (incluyendo el SuperAdmin) puede presionar el botón **"⚙️ Mi Perfil"** para actualizar su nombre completo, correo, cargo o cambiar su contraseña directamente.
+3. **Permisos Granulares por Colaborador (Sobrescritura RBAC)**:
+   - Permite a administradores otorgar facultades adicionales (ej. permitir que un vendedor o supervisor cree clientes, importe productos o registre usuarios ventas) o revocar permisos específicos a un usuario en particular, sin alterar la plantilla global del rol.
+   - Accesible directamente desde:
+     - La tabla de usuarios en Catálogos ([UsuariosTable.tsx](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/catalogos/components/UsuariosTable.tsx)) mediante el botón `🛡️`.
+     - El módulo de RBAC ([RolesManagerView.tsx](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/rbac/RolesManagerView.tsx)) en la pestaña **👤 Permisos por Usuario**.
+   - Gestionado mediante el componente [UserPermissionsModal.tsx](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/rbac/components/UserPermissionsModal.tsx) que discrimina visualmente: `[✨ Especial Otorgado]`, `[En rol base]` y `[🚫 Revocado]`, con opción de restablecer en un clic a los valores de fábrica del rol.
 
 ---
 
 ## 6. Lógica de Negocio y Flujos Críticos
 
-### 1. Cálculos Financieros Reactivos ([calculosFinancieros.ts](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/cotizaciones/utils/calculosFinancieros.ts))
+### 1. Cálculos Financieros Reactivos y Multi-Moneda ([calculosFinancieros.ts](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/cotizaciones/utils/calculosFinancieros.ts))
 En cada pulsación de tecla sobre cantidad o precio unitario:
 - `totalLinea = ROUND(cantidad * precioUnitario, 2)`.
 - `subtotalSinIva = ROUND(SUM(totalLinea), 2)`.
-- `montoIva = ROUND(subtotalSinIva * 0.13, 2)` *(Tasa IVA 13% El Salvador)*.
+- `tasaIva = (sucursalActiva?.porcentajeIva ?? 13) / 100`.
+- `montoIva = ROUND(subtotalSinIva * tasaIva, 2)` *(Tasa IVA dinámica según sucursal: 13%, 12%, 15%, 0%)*.
 - `totalInversion = ROUND(subtotalSinIva + montoIva, 2)`.
-- `totalEnLetras = numeroALetras(totalInversion)` *(ejemplo: `DOSCIENTOS DOLARES CON 08/100`)*.
+- Símbolo de moneda dinámico en tablas e inputs según `sucursalActiva?.monedaSimbolo` (default `$`).
+- `totalEnLetras = numeroALetras(totalInversion, sucursalActiva?.monedaNombre || 'DOLARES')` *(ejemplo: `DOSCIENTOS DOLARES CON 08/100` o `DOSCIENTOS QUETZALES CON 08/100`)*.
 
-### 2. Previsualización y Descarga de PDF sin Fugas de Memoria
+### 2. Configuración Fiscal y Parámetros Comerciales por Sucursal ([SucursalesView.tsx](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/sucursales/SucursalesView.tsx))
+Cada sede permite configurar de forma independiente:
+- **Tasa de IVA**: Presets de un clic para El Salvador (13%), Guatemala (12%), Honduras/Nicaragua (15%) o Exento (0%).
+- **Moneda y Símbolo**: Presets de un clic para Dólares (`$ USD`), Quetzales (`Q GTQ`), Lempiras (`L HNL`), Córdobas (`C$ NIO`), Colones (`₡ CRC`), Euros (`€ EUR`) y Pesos (`MX$ MXN`).
+- **Parámetros Comerciales**: Días de validez de cotizaciones (default 15), tiempo de entrega predeterminado y cláusula de garantía para el documento emitido.
+- **Toggle de IVA**: Opción para desglosar o consolidar el renglón de impuesto.
+
+### 3. Previsualización y Descarga de PDF sin Fugas de Memoria
 - El botón **"Vista Previa PDF"** llama a `cotizacionesApi.previsualizarPdf(data)` obteniendo un `Blob`.
 - Se genera un Object URL temporal (`URL.createObjectURL(blob)`) y se muestra en un modal interactivo con `<iframe>`.
 - **Buenas prácticas senior**: Se aplica `setTimeout(() => window.URL.revokeObjectURL(url), 60000)` para liberar la memoria del navegador.
 
-### 3. Asistente de Carga Masiva (CSV / Copiar-Pegar de Excel)
+### 4. Asistente de Carga Masiva (CSV / Copiar-Pegar de Excel)
 En [BatchImportModal.tsx](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/catalogos/components/BatchImportModal.tsx):
 - Permite arrastrar un archivo `.csv` o pegar filas directamente desde una hoja de cálculo.
 - Parsea y valida los registros en tiempo real en el navegador antes de enviar la petición.

@@ -186,14 +186,23 @@ export const CotizacionForm = () => {
     name: 'items'
   });
 
+  // Configuración de la sucursal activa (IVA, Moneda, etc.)
+  const porcentajeIvaSucursal = sucursalActiva?.porcentajeIva !== undefined && sucursalActiva?.porcentajeIva !== null
+    ? Number(sucursalActiva.porcentajeIva)
+    : 13;
+  const tasaIvaSucursal = porcentajeIvaSucursal / 100;
+  const simboloMoneda = sucursalActiva?.monedaSimbolo || '$';
+  const nombreMoneda = sucursalActiva?.monedaNombre || 'DOLARES';
+
   const { subtotalSinIva, montoIva, totalInversion } = calcularTotales(
     (watchItems || []).map(it => ({
       cantidad: Number(it?.cantidad || 0),
       precioUnitario: Number(it?.precioUnitario || 0)
-    }))
+    })),
+    tasaIvaSucursal
   );
 
-  const totalEnLetras = numeroALetras(totalInversion);
+  const totalEnLetras = numeroALetras(totalInversion, nombreMoneda);
 
   const prepararDatos = (data: CotizacionFormData): CotizacionFormData => {
     const itemsCalculados = (data.items || []).map((it, idx) => {
@@ -423,6 +432,8 @@ export const CotizacionForm = () => {
           totalInversion={totalInversion}
           totalEnLetras={totalEnLetras}
           inputClasses={inputClasses}
+          simboloMoneda={simboloMoneda}
+          porcentajeIva={porcentajeIvaSucursal}
         />
 
         {/* Botones de Acción */}

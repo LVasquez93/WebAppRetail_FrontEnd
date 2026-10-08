@@ -22,6 +22,8 @@ export interface Usuario {
   sucursalId?: number;
   empresaId?: number;
   activo?: boolean;
+  permisosPersonalizados?: string[];
+  tienePermisosPersonalizados?: boolean;
 }
 
 export interface Equipo {
@@ -56,4 +58,13 @@ export interface Sucursal {
   notaPredeterminada?: string;
   empresaId?: number;
   activo: boolean;
+  // Opciones de configuración comercial y fiscal
+  porcentajeIva?: number;
+  monedaCodigo?: string;
+  monedaSimbolo?: string;
+  monedaNombre?: string;
+  diasValidezCotizacion?: number;
+  tiempoEntregaPredeterminado?: string;
+  garantiaPredeterminada?: string;
+  mostrarIvaDesglosado?: boolean;
 }

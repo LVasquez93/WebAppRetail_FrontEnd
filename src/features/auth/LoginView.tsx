@@ -147,11 +147,11 @@ export const LoginView: React.FC = () => {
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => handleQuickLogin('ERAMIREZ', 'admin123')}
+                onClick={() => handleQuickLogin('GERENTE', 'GRERENTE')}
                 className="p-2 text-left bg-teal-50/70 hover:bg-teal-100/70 border border-teal-200 rounded-lg transition-colors cursor-pointer"
               >
                 <div className="text-[11px] font-bold text-teal-900">👑 Gerente</div>
-                <div className="text-[10px] text-teal-700">ERAMIREZ / admin123</div>
+                <div className="text-[10px] text-teal-700">GERENTE / GERENTE</div>
               </button>
 
               <button
@@ -170,6 +170,23 @@ export const LoginView: React.FC = () => {
               >
                 <div className="text-[11px] font-bold text-emerald-900">💼 Ventas01</div>
                 <div className="text-[10px] text-emerald-700">VENTASSV001 / ventas123</div>
+              </button>
+                            <button
+                type="button"
+                onClick={() => handleQuickLogin('LPENA', 'Lpena')}
+                className="p-2 text-left bg-indigo-50/70 hover:bg-indigo-100/70 border border-indigo-200 rounded-lg transition-colors cursor-pointer"
+              >
+                <div className="text-[11px] font-bold text-indigo-900">💼 LPENA</div>
+                <div className="text-[10px] text-indigo-700">LPENA / Lpena</div>
+              </button>
+
+                <button
+                type="button"
+                onClick={() => handleQuickLogin('INGE', 'inge')}
+                className="p-2 text-left bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+              >
+                <div className="text-[11px] font-bold text-emerald-900">💼 Ingenieros</div>
+                <div className="text-[10px] text-emerald-700">INGE / inge</div>
               </button>
             </div>
           </div>

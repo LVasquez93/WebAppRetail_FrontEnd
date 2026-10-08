@@ -14,6 +14,7 @@ import { UsuariosTable } from './components/UsuariosTable';
 import { CatalogoFormModal } from './components/CatalogoFormModal';
 import { BatchImportModal } from './components/BatchImportModal';
 import { ConfirmDeleteModal } from './components/ConfirmDeleteModal';
+import { UserPermissionsModal } from '../rbac/components/UserPermissionsModal';
 import { useAuth } from '../../context/AuthContext';
 
 export const CatalogosManagerView: React.FC = () => {
@@ -58,6 +59,10 @@ export const CatalogosManagerView: React.FC = () => {
 
   // Sub-filtro para pestaña de usuarios (cuando es SuperAdmin)
   const [filtroTipoUsuario, setFiltroTipoUsuario] = useState<'EMPRESA' | 'ADMINS' | 'TODOS'>('EMPRESA');
+
+  // Estados del Modal de Permisos Especiales por Usuario
+  const [modalPermisosAbierto, setModalPermisosAbierto] = useState(false);
+  const [usuarioParaPermisos, setUsuarioParaPermisos] = useState<Usuario | null>(null);
 
   // Sincronizar sucursal de lote con sucursal activa
   useEffect(() => {
@@ -166,6 +171,12 @@ export const CatalogosManagerView: React.FC = () => {
     setRegistroEdicion(item);
     setFormData({ ...item, password: '' });
     setModalFormAbierto(true);
+  };
+
+  // Abrir Modal para Gestionar Permisos Especiales de Usuario
+  const handleGestionarPermisos = (usuario: Usuario) => {
+    setUsuarioParaPermisos(usuario);
+    setModalPermisosAbierto(true);
   };
 
   // Guardar Registro (Crear o Actualizar)
@@ -494,6 +505,7 @@ export const CatalogosManagerView: React.FC = () => {
             obtenerNombreSucursal={obtenerNombreSucursal}
             onEditar={handleEditar}
             onEliminar={confirmarEliminar}
+            onGestionarPermisos={handleGestionarPermisos}
           />
         )}
       </div>
@@ -536,6 +548,19 @@ export const CatalogosManagerView: React.FC = () => {
         eliminando={eliminando}
         onConfirm={ejecutarEliminacion}
         onCancel={() => setModalEliminarAbierto(false)}
+      />
+
+      {/* Modal de Permisos Especiales por Usuario */}
+      <UserPermissionsModal
+        isOpen={modalPermisosAbierto}
+        usuario={usuarioParaPermisos}
+        onClose={() => {
+          setModalPermisosAbierto(false);
+          setUsuarioParaPermisos(null);
+        }}
+        onPermisosActualizados={() => {
+          cargarDatos();
+        }}
       />
     </div>
   );

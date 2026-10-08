@@ -1,7 +1,12 @@
 import axiosClient from './axiosClient';
-import { RbacMatriz } from '../features/rbac/types/rbac.types';
+import { RbacMatriz, PermisoDefinicion, UsuarioPermisos } from '../features/rbac/types/rbac.types';
 
 export const rbacApi = {
+  obtenerCatalogo: async (): Promise<PermisoDefinicion[]> => {
+    const response = await axiosClient.get('/rbac/catalogo');
+    return response.data;
+  },
+
   obtenerMatriz: async (): Promise<RbacMatriz> => {
     const response = await axiosClient.get('/rbac/matriz');
     return response.data;
@@ -14,6 +19,21 @@ export const rbacApi = {
 
   restablecerDefaults: async (): Promise<RbacMatriz> => {
     const response = await axiosClient.post('/rbac/reset');
+    return response.data;
+  },
+
+  obtenerPermisosUsuario: async (usuarioId: number): Promise<UsuarioPermisos> => {
+    const response = await axiosClient.get(`/rbac/usuarios/${usuarioId}/permisos`);
+    return response.data;
+  },
+
+  guardarPermisosUsuario: async (usuarioId: number, permisos: string[]): Promise<UsuarioPermisos> => {
+    const response = await axiosClient.put(`/rbac/usuarios/${usuarioId}/permisos`, permisos);
+    return response.data;
+  },
+
+  restablecerPermisosUsuario: async (usuarioId: number): Promise<UsuarioPermisos> => {
+    const response = await axiosClient.post(`/rbac/usuarios/${usuarioId}/permisos/reset`);
     return response.data;
   },
 

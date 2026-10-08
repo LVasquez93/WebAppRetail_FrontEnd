@@ -6,6 +6,7 @@ interface UsuariosTableProps {
   obtenerNombreSucursal: (id?: number) => string;
   onEditar: (usuario: Usuario) => void;
   onEliminar: (id: number, nombre: string) => void;
+  onGestionarPermisos?: (usuario: Usuario) => void;
 }
 
 export const UsuariosTable: React.FC<UsuariosTableProps> = ({
@@ -13,6 +14,7 @@ export const UsuariosTable: React.FC<UsuariosTableProps> = ({
   obtenerNombreSucursal,
   onEditar,
   onEliminar,
+  onGestionarPermisos,
 }) => {
   return (
     <div className="overflow-x-auto">
@@ -40,8 +42,18 @@ export const UsuariosTable: React.FC<UsuariosTableProps> = ({
             usuarios.map((u, i) => (
               <tr key={u.id} className="hover:bg-gray-50 transition-colors">
                 <td className="p-3 text-center text-gray-400 font-mono">{i + 1}</td>
-                <td className="p-3 font-mono font-bold text-blue-800">
-                  {u.username}
+                <td className="p-3 font-mono">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-bold text-blue-800">{u.username}</span>
+                    {u.tienePermisosPersonalizados && (
+                      <span
+                        className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300"
+                        title="Posee permisos especiales personalizados"
+                      >
+                        ✨ Especial
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="p-3 font-semibold text-gray-800">
                   {u.nombreCompleto}
@@ -88,6 +100,16 @@ export const UsuariosTable: React.FC<UsuariosTableProps> = ({
                 </td>
                 <td className="p-3 text-center">
                   <div className="flex items-center justify-center gap-1.5">
+                    {onGestionarPermisos && (
+                      <button
+                        type="button"
+                        onClick={() => onGestionarPermisos(u)}
+                        className="p-1.5 text-purple-700 hover:bg-purple-100 rounded-lg transition-colors cursor-pointer"
+                        title="Gestionar permisos específicos del usuario"
+                      >
+                        🛡️
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => onEditar(u)}

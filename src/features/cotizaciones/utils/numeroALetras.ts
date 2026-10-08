@@ -35,13 +35,14 @@ function convertirNumero(n: number): string {
   return textoMillones + convertirNumero(resto);
 }
 
-export function numeroALetras(cantidad: number): string {
-  if (cantidad === null || cantidad === undefined) return 'CERO DOLARES CON 00/100';
+export function numeroALetras(cantidad: number, nombreMoneda: string = 'DOLARES'): string {
+  const moneda = nombreMoneda ? nombreMoneda.trim().toUpperCase() : 'DOLARES';
+  if (cantidad === null || cantidad === undefined) return `CERO ${moneda} CON 00/100`;
   const abs = Math.abs(cantidad);
   const parteEntera = Math.floor(abs);
   const centavos = Math.round((abs - parteEntera) * 100);
 
   let letras = parteEntera === 0 ? 'CERO ' : convertirNumero(parteEntera);
   const centavosStr = centavos.toString().padStart(2, '0');
-  return `${letras.trim()} DOLARES CON ${centavosStr}/100`;
+  return `${letras.trim()} ${moneda} CON ${centavosStr}/100`;
 }

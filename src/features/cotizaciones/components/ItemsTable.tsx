@@ -21,6 +21,8 @@ interface ItemsTableProps {
   totalInversion: number;
   totalEnLetras: string;
   inputClasses: string;
+  simboloMoneda?: string;
+  porcentajeIva?: number;
 }
 
 export const ItemsTable: React.FC<ItemsTableProps> = ({
@@ -40,6 +42,8 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
   totalInversion,
   totalEnLetras,
   inputClasses,
+  simboloMoneda = '$',
+  porcentajeIva = 13,
 }) => {
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -218,7 +222,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                       <td className="p-2 sm:p-3 align-top">
                         <label className="text-xs font-semibold text-gray-500 block mb-1 md:hidden">Total</label>
                         <div className="p-2 bg-gray-100 rounded-md font-bold text-gray-800 text-right font-mono mt-1">
-                          ${totalLinea.toFixed(2)}
+                          {simboloMoneda}{totalLinea.toFixed(2)}
                         </div>
                       </td>
                       <td className="p-2 sm:p-3 align-top text-center">
@@ -257,15 +261,15 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
           <div className="space-y-3">
             <div className="flex justify-between text-gray-700">
               <span className="font-medium">Subtotal sin IVA:</span>
-              <span className="font-semibold font-mono">${subtotalSinIva.toFixed(2)}</span>
+              <span className="font-semibold font-mono">{simboloMoneda}{subtotalSinIva.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-gray-700">
-              <span className="font-medium">13% IVA:</span>
-              <span className="font-semibold font-mono">${montoIva.toFixed(2)}</span>
+              <span className="font-medium">{porcentajeIva}% IVA:</span>
+              <span className="font-semibold font-mono">{simboloMoneda}{montoIva.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-rose-900 text-xl font-bold pt-2 border-t border-rose-200 font-mono">
               <span>Total Inversión:</span>
-              <span>${totalInversion.toFixed(2)}</span>
+              <span>{simboloMoneda}{totalInversion.toFixed(2)}</span>
             </div>
             <div className="text-xs text-rose-700 text-right font-medium italic">
               Son: {totalEnLetras}
