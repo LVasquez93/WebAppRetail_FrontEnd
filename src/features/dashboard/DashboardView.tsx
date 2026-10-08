@@ -9,13 +9,16 @@ export const DashboardView: React.FC = () => {
 
   const getRoleName = () => {
     if (isAdmin) return 'Super Administrador SaaS';
-    if (isGerente) return 'Gerente de Empresa';
+    if (user?.rol === 'ROLE_GERENTE_GENERAL') return 'Gerente General (Empresa)';
+    if (user?.rol === 'ROLE_GERENTE_SUCURSAL') return 'Gerente de Sucursal';
+    if (isGerente) return 'Gerente';
     return 'Ejecutivo de Ventas';
   };
 
   const getRoleBadgeStyle = () => {
     if (isAdmin) return 'bg-amber-100 text-amber-900 border-amber-300';
-    if (isGerente) return 'bg-indigo-100 text-indigo-900 border-indigo-300';
+    if (user?.rol === 'ROLE_GERENTE_GENERAL') return 'bg-teal-100 text-[#1F3D3D] border-teal-300';
+    if (user?.rol === 'ROLE_GERENTE_SUCURSAL' || isGerente) return 'bg-cyan-100 text-cyan-900 border-cyan-300';
     return 'bg-emerald-100 text-emerald-900 border-emerald-300';
   };
 
@@ -240,6 +243,35 @@ export const DashboardView: React.FC = () => {
               </div>
               <div className="mt-6 pt-4 border-t border-purple-100 flex items-center justify-between text-xs font-bold text-purple-700 group-hover:translate-x-1 transition-transform">
                 <span>Panel de empresas</span>
+                <span>→</span>
+              </div>
+            </Link>
+          )}
+
+          {/* Tarjeta 6: Gestión de Roles y Permisos (RBAC) (Exclusivo SuperAdmin) */}
+          {isAdmin && (
+            <Link
+              to="/roles"
+              className="group bg-gradient-to-br from-white to-indigo-50/50 rounded-2xl p-6 shadow-md hover:shadow-xl border border-indigo-200 hover:border-indigo-400 transition-all duration-200 flex flex-col justify-between cursor-pointer"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-3xl p-3 bg-indigo-100 text-indigo-700 rounded-2xl group-hover:scale-110 transition-transform">
+                    🛡️
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-indigo-200 text-indigo-900 px-2.5 py-1 rounded-full">
+                    Seguridad
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">
+                  Roles & Permisos (RBAC)
+                </h3>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Configura la matriz interactiva de autorizaciones, permisos por módulo y herencia en cascada entre roles del sistema.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-indigo-100 flex items-center justify-between text-xs font-bold text-indigo-700 group-hover:translate-x-1 transition-transform">
+                <span>Gestionar matriz de permisos</span>
                 <span>→</span>
               </div>
             </Link>

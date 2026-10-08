@@ -6,6 +6,7 @@ import { DashboardView } from './features/dashboard/DashboardView';
 import { SucursalesView } from './features/sucursales/SucursalesView';
 import { CatalogosManagerView } from './features/catalogos/CatalogosManagerView';
 import { EmpresasManagerView } from './features/empresas/EmpresasManagerView';
+import { RolesManagerView } from './features/rbac/RolesManagerView';
 import { LoginView } from './features/auth/LoginView';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
@@ -48,6 +49,14 @@ function App() {
                   element={
                     <ProtectedRoute requireAdmin={true}>
                       <EmpresasManagerView />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/roles"
+                  element={
+                    <ProtectedRoute requireAdmin={true}>
+                      <RolesManagerView />
                     </ProtectedRoute>
                   }
                 />

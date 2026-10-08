@@ -5,12 +5,15 @@ import { sucursalesApi } from '../../api/sucursalesApi';
 import { Sucursal } from '../catalogos/types/catalogos.types';
 
 export const SucursalesView: React.FC = () => {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isGerenteGeneral, isGerenteSucursal, hasPermission } = useAuth();
   const { sucursales, sucursalActiva, setSucursalActiva, recargarSucursales, cargandoSucursales, empresaSeleccionada } = useSucursal();
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(sucursalActiva?.id || null);
   const [formData, setFormData] = useState<Partial<Sucursal>>({});
   const [guardando, setGuardando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
+
+  const puedeCrear = isAdmin || isGerenteGeneral || hasPermission('SUCURSALES_CREAR');
+  const puedeEliminar = isAdmin || isGerenteGeneral || hasPermission('SUCURSALES_ELIMINAR');
 
   // Estado para modal de nueva sucursal
   const [modalNuevaSucursal, setModalNuevaSucursal] = useState(false);
@@ -184,30 +187,32 @@ export const SucursalesView: React.FC = () => {
                 <span className="font-bold text-[#1F3D3D]">{sucursalActiva.nombre}</span>
               </div>
             )}
-            <button
-              type="button"
-              onClick={() => {
-                setNuevaSucursal({
-                  codigo: `SUC_0${sucursales.length + 1}`,
-                  nombre: '',
-                  razonSocial: branchSeleccionada?.razonSocial || empresaSeleccionada?.razonSocial || '',
-                  nombreComercial: branchSeleccionada?.nombreComercial || empresaSeleccionada?.nombre || '',
-                  prefijoCotizacion: `COT${sucursales.length + 1}`,
-                  direccion: '',
-                  telefono: '',
-                  correo: '',
-                  formaPagoPredeterminada: 'Contado contra entrega / Transferencia Bancaria',
-                  notaPredeterminada: '** IMPORTANTE ** Precios sujetos a inventario.',
-                  nombreFirmante: user?.nombreCompleto || 'Ing. Erick Ramírez',
-                  cargoFirmante: user?.cargo || 'Gerente de Sucursal',
-                  activo: true,
-                });
-                setModalNuevaSucursal(true);
-              }}
-              className="bg-[#1F3D3D] hover:bg-[#2a5252] text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer transition-colors"
-            >
-              <span>➕</span> Nueva Sucursal
-            </button>
+            {puedeCrear && (
+              <button
+                type="button"
+                onClick={() => {
+                  setNuevaSucursal({
+                    codigo: `SUC_0${sucursales.length + 1}`,
+                    nombre: '',
+                    razonSocial: branchSeleccionada?.razonSocial || empresaSeleccionada?.razonSocial || '',
+                    nombreComercial: branchSeleccionada?.nombreComercial || empresaSeleccionada?.nombre || '',
+                    prefijoCotizacion: `COT${sucursales.length + 1}`,
+                    direccion: '',
+                    telefono: '',
+                    correo: '',
+                    formaPagoPredeterminada: 'Contado contra entrega / Transferencia Bancaria',
+                    notaPredeterminada: '** IMPORTANTE ** Precios sujetos a inventario.',
+                    nombreFirmante: user?.nombreCompleto || 'Ing. Erick Ramírez',
+                    cargoFirmante: user?.cargo || 'Gerente de Sucursal',
+                    activo: true,
+                  });
+                  setModalNuevaSucursal(true);
+                }}
+                className="bg-[#1F3D3D] hover:bg-[#2a5252] text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer transition-colors"
+              >
+                <span>➕</span> Nueva Sucursal
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -582,7 +587,7 @@ export const SucursalesView: React.FC = () => {
 
           {/* Botones de Acción Principal */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-2">
-            {sucursales.length > 1 ? (
+            {sucursales.length > 1 && puedeEliminar ? (
               <button
                 type="button"
                 onClick={handleEliminarSucursal}
@@ -594,22 +599,28 @@ export const SucursalesView: React.FC = () => {
               </button>
             ) : <div />}
 
-            <button
-              type="submit"
-              disabled={guardando}
-              className="bg-[#1F3D3D] hover:bg-[#2a5252] text-white font-bold px-6 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              {guardando ? (
-                <>
-                  <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
-                  Guardando Cambios...
-                </>
-              ) : (
-                <>
-                  <span>💾</span> Guardar Configuración de la Sucursal
-                </>
-              )}
-            </button>
+            {(!isGerenteSucursal || branchSeleccionada?.id === user?.sucursalId) ? (
+              <button
+                type="submit"
+                disabled={guardando}
+                className="bg-[#1F3D3D] hover:bg-[#2a5252] text-white font-bold px-6 py-2.5 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {guardando ? (
+                  <>
+                    <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                    Guardando Cambios...
+                  </>
+                ) : (
+                  <>
+                    <span>💾</span> Guardar Configuración de la Sucursal
+                  </>
+                )}
+              </button>
+            ) : (
+              <div className="bg-amber-50 text-amber-900 border border-amber-300 text-xs px-4 py-2.5 rounded-xl font-medium flex items-center gap-2">
+                <span>🔒</span> Modo solo lectura: Esta sucursal no corresponde a tu sede asignada.
+              </div>
+            )}
           </div>
         </form>
       )}

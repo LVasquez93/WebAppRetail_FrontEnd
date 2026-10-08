@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AuthUser, LoginRequest, AuthResponse } from '../features/auth/types/auth.types';
 import { authApi } from '../api/authApi';
+import { rbacApi } from '../api/rbacApi';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -9,7 +10,12 @@ interface AuthContextType {
   cargandoAuth: boolean;
   isAdmin: boolean;
   isGerente: boolean;
+  isGerenteGeneral: boolean;
+  isGerenteSucursal: boolean;
+  isVentas: boolean;
   isAdminOrGerente: boolean;
+  permisos: string[];
+  hasPermission: (permiso: string) => boolean;
   login: (credentials: LoginRequest) => Promise<AuthResponse>;
   logout: () => void;
   recargarSesion: () => Promise<void>;
@@ -34,7 +40,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return localStorage.getItem('cotizador_token');
   });
 
+  const [permisos, setPermisos] = useState<string[]>([]);
   const [cargandoAuth, setCargandoAuth] = useState<boolean>(true);
+
+  const cargarPermisosSeguros = async () => {
+    try {
+      const lista = await rbacApi.obtenerMisPermisos();
+      setPermisos(lista || []);
+    } catch (e) {
+      console.warn('No se pudieron cargar permisos RBAC dinámicos:', e);
+      setPermisos([]);
+    }
+  };
 
   // Verificar token al cargar la app
   useEffect(() => {
@@ -45,16 +62,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const usuarioActual = await authApi.getMe();
           setUser(usuarioActual);
           localStorage.setItem('cotizador_user', JSON.stringify(usuarioActual));
+          await cargarPermisosSeguros();
         } catch {
           // Si el token es inválido o expiró
           localStorage.removeItem('cotizador_token');
           localStorage.removeItem('cotizador_user');
           setUser(null);
           setToken(null);
+          setPermisos([]);
         }
       } else {
         setUser(null);
         setToken(null);
+        setPermisos([]);
       }
       setCargandoAuth(false);
     };
@@ -77,6 +97,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('cotizador_sucursal_id', String(userInfo.sucursalId));
     }
 
+    await cargarPermisosSeguros();
+
     return authData;
   };
 
@@ -85,6 +107,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('cotizador_user');
     setUser(null);
     setToken(null);
+    setPermisos([]);
     window.location.href = '/login';
   };
 
@@ -93,6 +116,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const usuarioActual = await authApi.getMe();
       setUser(usuarioActual);
       localStorage.setItem('cotizador_user', JSON.stringify(usuarioActual));
+      await cargarPermisosSeguros();
     } catch (e) {
       console.error('Error al recargar sesión:', e);
     }
@@ -100,8 +124,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const rol = user?.rol || '';
   const isAdmin = rol === 'ROLE_ADMIN' || rol === 'ADMIN';
-  const isGerente = rol === 'ROLE_GERENTE' || rol === 'GERENTE';
+  const isGerenteGeneral = rol === 'ROLE_GERENTE_GENERAL' || rol === 'GERENTE_GENERAL';
+  const isGerenteSucursal = rol === 'ROLE_GERENTE_SUCURSAL' || rol === 'GERENTE_SUCURSAL';
+  const isGerente = isGerenteGeneral || isGerenteSucursal || rol === 'ROLE_GERENTE' || rol === 'GERENTE';
+  const isVentas = rol === 'ROLE_VENTAS' || rol === 'VENTAS';
   const isAdminOrGerente = isAdmin || isGerente;
+
+  const hasPermission = (codigoPermiso: string): boolean => {
+    if (isAdmin) return true;
+    return permisos.includes(codigoPermiso);
+  };
+
   const isAuthenticated = !!token && !!user;
 
   return (
@@ -113,7 +146,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         cargandoAuth,
         isAdmin,
         isGerente,
+        isGerenteGeneral,
+        isGerenteSucursal,
+        isVentas,
         isAdminOrGerente,
+        permisos,
+        hasPermission,
         login,
         logout,
         recargarSesion,

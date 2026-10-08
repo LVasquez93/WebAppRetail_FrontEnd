@@ -161,6 +161,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <span className="text-lg shrink-0">🏛️</span>
                   {!isCollapsed && <span>Empresas (Tenants)</span>}
                 </Link>
+                <Link to="/roles" onClick={onClose} className={navLinkClass('/roles')} title="Roles & Permisos (RBAC)">
+                  <span className="text-lg shrink-0">🛡️</span>
+                  {!isCollapsed && <span>Roles & Permisos</span>}
+                </Link>
               </nav>
             </div>
           )}
@@ -185,6 +189,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {isAdmin ? (
                       <span className="bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[9px] px-1.5 py-0.2 rounded-full font-bold">
                         SuperAdmin SaaS
+                      </span>
+                    ) : user?.rol === 'ROLE_GERENTE_GENERAL' ? (
+                      <span className="bg-teal-500/20 text-teal-300 border border-teal-400/30 text-[9px] px-1.5 py-0.2 rounded-full font-bold truncate block">
+                        👑 Gerente General • {user.empresaNombre || 'Empresa'}
+                      </span>
+                    ) : user?.rol === 'ROLE_GERENTE_SUCURSAL' ? (
+                      <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 text-[9px] px-1.5 py-0.2 rounded-full font-bold truncate block">
+                        🏬 Gerente Sede • {user.sucursalNombre || 'Sucursal'}
                       </span>
                     ) : user?.empresaNombre ? (
                       <span className="bg-teal-900/60 text-teal-200 border border-teal-500/30 text-[9px] px-1.5 py-0.2 rounded-full font-medium truncate block max-w-full">

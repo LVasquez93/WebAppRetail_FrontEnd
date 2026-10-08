@@ -44,12 +44,13 @@ src/
 │   ├── axiosClient.ts                 # Instancia de Axios (modo dual: proxy local vs VITE_API_BASE_URL)
 │   ├── authApi.ts                     # Login y datos del usuario actual (/me)
 │   ├── empresasApi.ts                 # Gestión multi-empresa centralizada (SuperAdmin)
+│   ├── rbacApi.ts                     # Matriz de roles y permisos dinámicos (/matriz, /reset, /mis-permisos)
 │   ├── sucursalesApi.ts               # Listado, creación, actualización y eliminación de sucursales
 │   ├── catalogosApi.ts                # Clientes, Equipos y Usuarios (CRUD + lotes)
 │   └── cotizacionesApi.ts             # Crear, listar, descargar y previsualizar PDF
 │
 ├── context/                           # Estado global de la aplicación
-│   ├── AuthContext.tsx                # Usuario activo (con empresaId y empresaNombre), token JWT, login, logout y RBAC
+│   ├── AuthContext.tsx                # Usuario activo, token JWT, login, logout, roles 4-tier y permisos dinámicos (hasPermission)
 │   └── SucursalContext.tsx            # Sucursal activa seleccionada y aislamiento multi-empresa
 │
 ├── components/
@@ -68,12 +69,16 @@ src/
     ├── auth/
     │   └── LoginView.tsx              # Vista de autenticación y login con credenciales
     │
+    ├── rbac/                          # Módulo Roles y Permisos Dinámicos (RBAC)
+    │   ├── RolesManagerView.tsx       # Matriz interactiva de permisos por rol con herencia en cascada y presets
+    │   └── types/rbac.types.ts
+    │
     ├── empresas/                      # Módulo Multi-Empresa (Exclusivo SuperAdmin)
     │   ├── EmpresasManagerView.tsx    # Listado, creación, edición, alternancia de estado y gestión de Gerentes
     │   └── types/empresas.types.ts
     │
     ├── sucursales/
-    │   └── SucursalesView.tsx         # Gestión de sucursales, creación (+ Nueva), eliminación y membretes gráficos
+    │   └── SucursalesView.tsx         # Gestión de sucursales con permisos segregados (Gerente General vs Gerente Sede)
     │
     ├── catalogos/
     │   ├── types/catalogos.types.ts
@@ -125,17 +130,18 @@ src/
 
 ## 5. Matriz de Control de Acceso en la Interfaz (RBAC) & Multi-Tenancy
 
-| Módulo / Elemento UI | Ruta | `ROLE_ADMIN` (SaaS SuperAdmin) | `ROLE_GERENTE` | `ROLE_VENTAS` |
-| :--- | :--- | :---: | :---: | :---: |
-| **Dashboard Principal** | `/` | **Acceso Total** (Selector Tenant + Sucursal) | Acceso Total (Su Empresa) | Acceso Total (Su Sucursal) |
-| **Selector de Empresa (Navbar)** | N/A | **Interactivo** (Todas las Empresas) | Oculto (Muestra Badge Empresa) | Oculto (Muestra Badge Empresa) |
-| **Selector de Sucursal (Navbar)** | N/A | Interactivo (De la Empresa elegida) | Interactivo (De su Empresa) | **Bloqueado** (🔒 Sucursal Fija) |
-| **Perfil / Editar Cuenta (Navbar)**| N/A | **Interactivo** (Modal Mi Perfil) | **Interactivo** (Modal Mi Perfil) | **Interactivo** (Modal Mi Perfil) |
-| **Módulo Empresas** | `/empresas` | **Acceso Total** (CRUD + Gerentes) | **Bloqueado** (403) | **Bloqueado** (403) |
-| **Nueva Cotización** | `/cotizaciones/nueva` | Cotiza en Empresa/Sucursal activa | Cotiza en su Empresa/Sucursal | Cotiza en su Sucursal fija |
-| **Historial de Cotizaciones** | `/cotizaciones` | Filtros Cascada (Empresa -> Sucursal) + Columna Empresa | Filtrado en cascada restringido a su Empresa | Filtrado por su Empresa y Sucursal |
-| **Módulo Catálogos** | `/catalogos` | Segregado por Empresa + Vista especial de Administradores SaaS | Segregado por su Empresa | **Bloqueado** (Redirige a `/`) |
-| **Módulo Sucursales** | `/sucursales` | Gestiona sucursales de Empresa activa | Gestiona sus Sucursales | **Bloqueado** (Redirige a `/`) |
+| Módulo / Elemento UI | Ruta | `ROLE_ADMIN` (SaaS Root) | `ROLE_GERENTE_GENERAL` (Empresa) | `ROLE_GERENTE_SUCURSAL` (Sede) | `ROLE_VENTAS` (Operativo) |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| **Dashboard Principal** | `/` | **Acceso Total** (Selector Tenant + Sede) | Acceso Total (Su Empresa) | Acceso Total (Su Sede) | Acceso Total (Su Sede) |
+| **Selector de Empresa (Header)** | N/A | **Interactivo** (Todas las Empresas) | Oculto (Badge Empresa) | Oculto (Badge Empresa) | Oculto (Badge Empresa) |
+| **Selector de Sucursal (Header)**| N/A | Interactivo (De la Empresa elegida) | Interactivo (De su Empresa) | Bloqueado a su Sede | Bloqueado a su Sede |
+| **Perfil / Editar Cuenta** | Modal | Interactivo | Interactivo | Interactivo | Interactivo |
+| **Módulo Empresas (SaaS)** | `/empresas` | **Acceso Total** (CRUD + Gerentes) | Bloqueado (403) | Bloqueado (403) | Bloqueado (403) |
+| **Módulo Roles & Permisos (RBAC)**| `/roles` | **Matriz Interactiva** (Edición y Reset) | Vista / Bloqueado | Vista / Bloqueado | Bloqueado (403) |
+| **Nueva Cotización** | `/cotizaciones/nueva` | Cotiza en Empresa/Sucursal activa | Cotiza en su Empresa/Sucursal | Cotiza en su Sede | Cotiza en su Sede |
+| **Historial de Cotizaciones** | `/cotizaciones` | Filtros Cascada (Empresa -> Sede) | Filtrado por todas sus Sedes | Filtrado por su Sede | Filtrado por su Sede |
+| **Módulo Catálogos** | `/catalogos` | Segregado por Empresa + Admins SaaS | Segregado por su Empresa | Segregado por su Sede | Bloqueado (Redirige a `/`) |
+| **Módulo Sucursales** | `/sucursales` | Crear, editar y eliminar sedes | Crear, editar y eliminar sedes | Solo editar su propia sede | Bloqueado (Redirige a `/`) |
 
 ---
 

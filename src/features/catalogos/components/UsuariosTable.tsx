@@ -56,20 +56,32 @@ export const UsuariosTable: React.FC<UsuariosTableProps> = ({
                   <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
                     u.rol === 'ROLE_ADMIN'
                       ? 'bg-purple-100 text-purple-800 border-purple-300 font-bold'
-                      : u.rol === 'ROLE_GERENTE'
-                      ? 'bg-blue-100 text-blue-800 border-blue-300'
-                      : 'bg-gray-100 text-gray-700'
+                      : u.rol === 'ROLE_GERENTE_GENERAL'
+                      ? 'bg-teal-100 text-[#1F3D3D] border-teal-300 font-bold'
+                      : u.rol === 'ROLE_GERENTE_SUCURSAL' || u.rol === 'ROLE_GERENTE'
+                      ? 'bg-cyan-100 text-cyan-900 border-cyan-300'
+                      : 'bg-amber-100 text-amber-900 border-amber-300'
                   }`}>
-                    {u.rol === 'ROLE_ADMIN' ? '🛡️ ADMIN (SaaS)' : u.rol === 'ROLE_GERENTE' ? '👔 GERENTE' : '💼 VENTAS'}
+                    {u.rol === 'ROLE_ADMIN'
+                      ? '🛡️ ADMIN (SaaS)'
+                      : u.rol === 'ROLE_GERENTE_GENERAL'
+                      ? '👑 GTE. GENERAL'
+                      : u.rol === 'ROLE_GERENTE_SUCURSAL' || u.rol === 'ROLE_GERENTE'
+                      ? '🏬 GTE. SUCURSAL'
+                      : '💼 VENTAS'}
                   </span>
                 </td>
                 <td className="p-3">
-                  {u.rol === 'ROLE_ADMIN' || !u.sucursalId ? (
+                  {u.rol === 'ROLE_ADMIN' ? (
                     <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-800 border border-purple-200">
                       🛡️ Global (SaaS)
                     </span>
+                  ) : u.rol === 'ROLE_GERENTE_GENERAL' || !u.sucursalId ? (
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-teal-50 text-[#1F3D3D] border border-teal-200">
+                      🏢 Toda la Empresa
+                    </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-teal-50 text-teal-800 border border-teal-200">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-50 text-cyan-800 border border-cyan-200">
                       {obtenerNombreSucursal(u.sucursalId)}
                     </span>
                   )}

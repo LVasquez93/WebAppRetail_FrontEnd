@@ -25,7 +25,7 @@ export const CatalogoFormModal: React.FC<CatalogoFormModalProps> = ({
   onSubmit,
   onClose,
 }) => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isGerenteGeneral, isGerenteSucursal, user } = useAuth();
   if (!isOpen) return null;
 
   return (
@@ -281,26 +281,46 @@ export const CatalogoFormModal: React.FC<CatalogoFormModalProps> = ({
                       setFormData({
                         ...formData,
                         rol: newRol,
-                        sucursalId: newRol === 'ROLE_ADMIN' ? undefined : (formData.sucursalId || sucursales[0]?.id || 1),
-                        empresaId: newRol === 'ROLE_ADMIN' ? undefined : formData.empresaId,
+                        sucursalId:
+                          newRol === 'ROLE_ADMIN' || newRol === 'ROLE_GERENTE_GENERAL'
+                            ? undefined
+                            : (formData.sucursalId || (isGerenteSucursal ? user?.sucursalId : sucursales[0]?.id) || 1),
+                        empresaId: newRol === 'ROLE_ADMIN' ? undefined : (user?.empresaId || formData.empresaId),
                       });
                     }}
                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1F3D3D]"
                   >
-                    <option value="ROLE_VENTAS">ROLE_VENTAS (Vendedor/Emisor)</option>
-                    <option value="ROLE_GERENTE">ROLE_GERENTE (Gerente de Sucursal)</option>
+                    <option value="ROLE_VENTAS">ROLE_VENTAS (Vendedor / Emisor)</option>
+                    {(isAdmin || isGerenteGeneral) && (
+                      <option value="ROLE_GERENTE_SUCURSAL">ROLE_GERENTE_SUCURSAL (Gerente de Sucursal)</option>
+                    )}
                     {isAdmin && (
-                      <option value="ROLE_ADMIN">ROLE_ADMIN (Administrador Global SaaS)</option>
+                      <>
+                        <option value="ROLE_GERENTE_GENERAL">ROLE_GERENTE_GENERAL (Gerente General)</option>
+                        <option value="ROLE_ADMIN">ROLE_ADMIN (Administrador Global SaaS)</option>
+                      </>
                     )}
                   </select>
                 </div>
                 <div>
                   <label className="block font-semibold text-gray-700 mb-1">
-                    {formData.rol === 'ROLE_ADMIN' ? 'Alcance Operativo' : 'Sucursal Asignada *'}
+                    {formData.rol === 'ROLE_ADMIN'
+                      ? 'Alcance Operativo'
+                      : formData.rol === 'ROLE_GERENTE_GENERAL'
+                      ? 'Alcance Organizacional'
+                      : 'Sucursal Asignada *'}
                   </label>
                   {formData.rol === 'ROLE_ADMIN' ? (
                     <div className="w-full px-3 py-2 border border-purple-200 bg-purple-50 text-purple-900 rounded-lg text-xs font-semibold flex items-center gap-1.5 h-[42px]">
                       <span>🛡️ Acceso Global SaaS (Sin restricción de empresa ni sucursal)</span>
+                    </div>
+                  ) : formData.rol === 'ROLE_GERENTE_GENERAL' ? (
+                    <div className="w-full px-3 py-2 border border-teal-200 bg-teal-50 text-teal-900 rounded-lg text-xs font-semibold flex items-center gap-1.5 h-[42px]">
+                      <span>🏢 Toda la Empresa (Supervisión de todas las sedes)</span>
+                    </div>
+                  ) : isGerenteSucursal ? (
+                    <div className="w-full px-3 py-2 border border-cyan-200 bg-cyan-50 text-cyan-900 rounded-lg text-xs font-semibold flex items-center gap-1.5 h-[42px]">
+                      <span>🏬 Sede Actual ({sucursales.find(s => s.id === user?.sucursalId)?.nombre || 'Sede Asignada'})</span>
                     </div>
                   ) : (
                     <select
