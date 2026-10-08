@@ -14,6 +14,9 @@ interface AuthContextType {
   isGerenteSucursal: boolean;
   isVentas: boolean;
   isAdminOrGerente: boolean;
+  canSelectEmpresa: boolean;
+  canSelectSucursal: boolean;
+  isBranchLocked: boolean;
   permisos: string[];
   hasPermission: (permiso: string) => boolean;
   login: (credentials: LoginRequest) => Promise<AuthResponse>;
@@ -130,6 +133,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const isVentas = rol === 'ROLE_VENTAS' || rol === 'VENTAS';
   const isAdminOrGerente = isAdmin || isGerente;
 
+  // Capacidades de Alcance y Gobernanza de Sucursal / Tenant (Scope Policy)
+  const canSelectEmpresa = isAdmin;
+  const canSelectSucursal = isAdmin || isGerenteGeneral;
+  const isBranchLocked = !canSelectSucursal && !!user?.sucursalId;
+
   const hasPermission = (codigoPermiso: string): boolean => {
     if (isAdmin) return true;
     return permisos.includes(codigoPermiso);
@@ -150,6 +158,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isGerenteSucursal,
         isVentas,
         isAdminOrGerente,
+        canSelectEmpresa,
+        canSelectSucursal,
+        isBranchLocked,
         permisos,
         hasPermission,
         login,

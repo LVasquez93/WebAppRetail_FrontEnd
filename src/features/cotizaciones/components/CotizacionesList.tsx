@@ -2,31 +2,21 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { cotizacionesApi } from '../../../api/cotizacionesApi';
 import { CotizacionResponse } from '../types/cotizacion.types';
-import { useSucursal } from '../../../context/SucursalContext';
+import { TenantScopeFilter } from '../../../components/common/TenantScopeFilter';
+import { useTenantScopeFilter } from '../../../components/common/useTenantScopeFilter';
 import { useAuth } from '../../../context/AuthContext';
 
 export const CotizacionesList = () => {
   const location = useLocation();
-  const { user, isAdmin } = useAuth();
-  const { sucursales, empresas } = useSucursal();
+  const { isAdmin } = useAuth();
   const [bannerMessage, setBannerMessage] = useState<string | null>(location.state?.mensaje || null);
   const [cotizaciones, setCotizaciones] = useState<CotizacionResponse[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Filtros Multi-Tenant
-  const [filtroEmpresaId, setFiltroEmpresaId] = useState<number | 'TODAS'>('TODAS');
-  const [filtroSucursalId, setFiltroSucursalId] = useState<number | 'TODAS'>('TODAS');
-
-  // Sucursales disponibles para el selector (en cascada si el admin selecciona una empresa o restringido a la empresa del gerente)
-  const targetEmpresaId = isAdmin
-    ? (filtroEmpresaId === 'TODAS' ? undefined : filtroEmpresaId)
-    : user?.empresaId;
-
-  const sucursalesFiltradas = targetEmpresaId
-    ? sucursales.filter(s => s.empresaId === targetEmpresaId)
-    : sucursales;
+  // Filtro de Alcance Multi-Tenant Centralizado (Empresa y Sucursal con Gobernanza Automática)
+  const { scope, setScope } = useTenantScopeFilter();
 
   // Clear history state after reading so refreshing doesn't keep showing the message
   useEffect(() => {
@@ -49,12 +39,8 @@ export const CotizacionesList = () => {
   };
 
   useEffect(() => {
-    const empId = isAdmin
-      ? (filtroEmpresaId === 'TODAS' ? undefined : filtroEmpresaId)
-      : user?.empresaId;
-    const sucId = filtroSucursalId === 'TODAS' ? undefined : filtroSucursalId;
-    fetchCotizaciones(page, sucId, empId);
-  }, [page, filtroSucursalId, filtroEmpresaId, isAdmin, user?.empresaId]);
+    fetchCotizaciones(page, scope.sucursalId, scope.empresaId);
+  }, [page, scope.sucursalId, scope.empresaId]);
 
   const handleVerPdf = async (id: number) => {
     const newWindow = window.open('about:blank', '_blank');
@@ -104,56 +90,18 @@ export const CotizacionesList = () => {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Historial de Cotizaciones</h2>
-              {!isAdmin && user?.empresaNombre && (
-                <span className="bg-teal-50 text-teal-800 border border-teal-200 text-xs px-2.5 py-0.5 rounded-full font-bold">
-                  🏢 {user.empresaNombre}
-                </span>
-              )}
             </div>
             <p className="text-xs sm:text-sm text-gray-500 mt-1">Listado consolidado de cotizaciones emitidas con filtros por empresa y sucursal.</p>
           </div>
 
-          {/* Filtros Cascada (Empresa y Sucursal) */}
-          <div className="flex flex-wrap items-center gap-2">
-            {isAdmin && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-gray-500">Empresa:</span>
-                <select
-                  value={filtroEmpresaId}
-                  onChange={(e) => {
-                    const val = e.target.value === 'TODAS' ? 'TODAS' : Number(e.target.value);
-                    setFiltroEmpresaId(val);
-                    setFiltroSucursalId('TODAS');
-                    setPage(0);
-                  }}
-                  className="bg-gray-50 border border-gray-300 text-gray-800 text-xs sm:text-sm rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-[#1F3D3D] focus:border-[#1F3D3D]"
-                >
-                  <option value="TODAS">🏛️ Todas las Empresas</option>
-                  {empresas.map(emp => (
-                    <option key={emp.id} value={emp.id}>🏛️ {emp.nombre}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-gray-500">Sucursal:</span>
-              <select
-                value={filtroSucursalId}
-                onChange={(e) => {
-                  const val = e.target.value === 'TODAS' ? 'TODAS' : Number(e.target.value);
-                  setFiltroSucursalId(val);
-                  setPage(0);
-                }}
-                className="bg-gray-50 border border-gray-300 text-gray-800 text-xs sm:text-sm rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-[#1F3D3D] focus:border-[#1F3D3D]"
-              >
-                <option value="TODAS">🏢 Todas las Sucursales</option>
-                {sucursalesFiltradas.map(s => (
-                  <option key={s.id} value={s.id}>🏢 {s.nombre}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          {/* Filtros Cascada Centralizados (Empresa y Sucursal con Gobernanza Automática) */}
+          <TenantScopeFilter
+            value={scope}
+            onChange={(newScope) => {
+              setScope(newScope);
+              setPage(0);
+            }}
+          />
         </div>
         
         {cotizaciones.length === 0 ? (

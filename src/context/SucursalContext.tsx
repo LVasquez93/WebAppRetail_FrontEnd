@@ -16,12 +16,15 @@ interface SucursalContextType {
   recargarEmpresas: () => Promise<void>;
   cargandoSucursales: boolean;
   cargandoEmpresas: boolean;
+  canSelectEmpresa: boolean;
+  canSelectSucursal: boolean;
+  isBranchLocked: boolean;
 }
 
 const SucursalContext = createContext<SucursalContextType | undefined>(undefined);
 
 export const SucursalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user, isAdminOrGerente, isAdmin } = useAuth();
+  const { user, isAdmin, canSelectEmpresa, canSelectSucursal, isBranchLocked } = useAuth();
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [empresaSeleccionada, setEmpresaSeleccionadaState] = useState<Empresa | null>(null);
   const [cargandoEmpresas, setCargandoEmpresas] = useState<boolean>(true);
@@ -89,7 +92,7 @@ export const SucursalProvider: React.FC<{ children: ReactNode }> = ({ children }
       setSucursales(filtered);
 
       if (filtered && filtered.length > 0) {
-        if (!isAdminOrGerente && user?.sucursalId) {
+        if (isBranchLocked && user?.sucursalId) {
           const asignada = filtered.find(s => s.id === user.sucursalId) || filtered[0];
           setSucursalActivaState(asignada);
           localStorage.setItem('cotizador_sucursal_id', String(asignada.id));
@@ -144,7 +147,7 @@ export const SucursalProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const setSucursalActiva = (sucursal: Sucursal) => {
-    if (!isAdminOrGerente && user?.sucursalId && sucursal.id !== user.sucursalId) {
+    if (isBranchLocked && user?.sucursalId && sucursal.id !== user.sucursalId) {
       console.warn('Cambio de sucursal restringido por políticas de seguridad RBAC.');
       return;
     }
@@ -165,6 +168,9 @@ export const SucursalProvider: React.FC<{ children: ReactNode }> = ({ children }
         recargarEmpresas: cargarEmpresas,
         cargandoSucursales,
         cargandoEmpresas,
+        canSelectEmpresa,
+        canSelectSucursal,
+        isBranchLocked,
       }}
     >
       {children}

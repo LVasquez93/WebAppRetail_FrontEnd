@@ -112,21 +112,22 @@ src/
 ## 4. Gestión del Estado Global y Contextos
 
 ### 1. `AuthContext.tsx`
-- **Responsabilidad**: Gestiona la autenticación con tokens JWT.
+- **Responsabilidad**: Gestiona la autenticación con tokens JWT y las capacidades semánticas de alcance (Scope Policy).
 - **Almacenamiento**: `localStorage` bajo las claves `cotizador_token` y `cotizador_user`.
-- **Datos expuestos**: `user` (`id`, `username`, `rol`, `sucursalId`, `empresaId`, `empresaNombre`, `nombreCompleto`), `token`, `isAdmin`, `isGerente`, `isAdminOrGerente`, `login()`, `logout()`.
+- **Datos expuestos**: `user` (`id`, `username`, `rol`, `sucursalId`, `empresaId`, `empresaNombre`, `nombreCompleto`), `token`, `isAdmin`, `isGerenteGeneral`, `isGerenteSucursal`, `isVentas`, `canSelectEmpresa`, `canSelectSucursal`, `isBranchLocked`, `login()`, `logout()`.
+- **Capacidades Semánticas de Alcance**:
+  - `canSelectEmpresa = isAdmin`: Solo el SuperAdmin puede conmutar entre diferentes tenants/organizaciones.
+  - `canSelectSucursal = isAdmin || isGerenteGeneral`: Solo el SuperAdmin o el Dueño/Gerente General de la empresa pueden alternar entre sedes o seleccionar "Todas".
+  - `isBranchLocked = !canSelectSucursal && !!user?.sucursalId`: Activo para Gerentes de Sucursal y Vendedores; bloquea estrictamente la sede asignada impidiendo cualquier cambio de sucursal.
 - **Integración con Axios**: [axiosClient.ts](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/api/axiosClient.ts) inyecta automáticamente el token en la cabecera `Authorization: Bearer <token>` de cada petición y redirige a `/login` en caso de respuesta `401 Unauthorized`.
 
 ### 2. `SucursalContext.tsx`
 - **Responsabilidad**: Gestiona el contexto activo multi-tenant tanto a nivel de Empresa como de Sucursal.
-- **Estado expuesto**: `empresas`, `empresaSeleccionada`, `setEmpresaSeleccionada`, `sucursales`, `sucursalActiva`, `setSucursalActiva`, `cargandoEmpresas`, `cargandoSucursales`.
+- **Estado expuesto**: `empresas`, `empresaSeleccionada`, `setEmpresaSeleccionada`, `sucursales`, `sucursalActiva`, `setSucursalActiva`, `cargandoEmpresas`, `cargandoSucursales`, `canSelectEmpresa`, `canSelectSucursal`, `isBranchLocked`.
 - **Comportamiento por Rol**:
-  - `ROLE_ADMIN`: **Super Administrador de la Plataforma SaaS (Global)**.
-    - No pertenece a ninguna empresa fija.
-    - Dispone de un selector interactivo de **Empresa** en el Navbar y en el Dashboard para alternar entre tenants en tiempo real.
-    - Al cambiar de empresa, las sucursales se recargan dinámicamente y los catálogos/formularios se sincronizan con la organización activa.
-  - `ROLE_GERENTE`: Dueño/Gerente de empresa. Su contexto queda fijado a `user.empresaId`. Puede ver y administrar todas las sucursales de su empresa y sus propios catálogos.
-  - `ROLE_VENTAS`: **Bloqueado automáticamente**. Fija la `sucursalId` y `empresaId` asignadas a su cuenta.
+  - `ROLE_ADMIN`: **Super Administrador de la Plataforma SaaS (Global)**. Dispone de selector de Empresa y selector de Sucursal en tiempo real.
+  - `ROLE_GERENTE_GENERAL`: Fijo a su empresa (`user.empresaId`), pero puede cambiar libremente entre cualquier sucursal de su empresa en el Header o en filtros.
+  - `ROLE_GERENTE_SUCURSAL` y `ROLE_VENTAS`: **Bloqueo Estricto de Sede**. Su `sucursalActiva` se fuerza a `user.sucursalId`. Cualquier llamada a `setSucursalActiva` con otra sede es rechazada, y en el Header y filtros se despliega un badge 🔒 con su sede fija, sin menú desplegable.
 
 ---
 
@@ -136,19 +137,19 @@ src/
 | :--- | :--- | :---: | :---: | :---: | :---: |
 | **Dashboard Principal** | `/` | **Acceso Total** (Selector Tenant + Sede) | Acceso Total (Su Empresa) | Acceso Total (Su Sede) | Acceso Total (Su Sede) |
 | **Selector de Empresa (Header)** | N/A | **Interactivo** (Todas las Empresas) | Oculto (Badge Empresa) | Oculto (Badge Empresa) | Oculto (Badge Empresa) |
-| **Selector de Sucursal (Header)**| N/A | Interactivo (De la Empresa elegida) | Interactivo (De su Empresa) | Bloqueado a su Sede | Bloqueado a su Sede |
+| **Selector de Sucursal (Header)**| N/A | Interactivo (De la Empresa elegida) | Interactivo (De su Empresa) | **Bloqueado 🔒** (Su Sede fija) | **Bloqueado 🔒** (Su Sede fija) |
 | **Perfil / Editar Cuenta** | Modal | Interactivo | Interactivo | Interactivo | Interactivo |
 | **Módulo Empresas (SaaS)** | `/empresas` | **Acceso Total** (CRUD + Gerentes) | Bloqueado (403) | Bloqueado (403) | Bloqueado (403) |
 | **Módulo Roles & Permisos (RBAC)**| `/roles` | **Matriz Interactiva** (Edición y Reset) | Vista / Bloqueado | Vista / Bloqueado | Bloqueado (403) |
 | **Nueva Cotización** | `/cotizaciones/nueva` | Cotiza en Empresa/Sucursal activa | Cotiza en su Empresa/Sucursal | Cotiza en su Sede | Cotiza en su Sede |
-| **Historial de Cotizaciones** | `/cotizaciones` | Filtros Cascada (Empresa -> Sede) | Filtrado por todas sus Sedes | Filtrado por su Sede | Filtrado por su Sede |
+| **Historial de Cotizaciones** | `/cotizaciones` | Filtros Cascada (Empresa -> Sede) | Filtro por sedes de su empresa | **Bloqueado 🔒** a su Sede | **Bloqueado 🔒** a su Sede |
 | **Módulo Catálogos** | `/catalogos` | Segregado por Empresa + Admins SaaS | Segregado por su Empresa | Segregado por su Sede | Bloqueado (Redirige a `/`) |
 | **Módulo Sucursales** | `/sucursales` | Crear, editar y eliminar sedes | Crear, editar y eliminar sedes | Solo editar su propia sede | Bloqueado (Redirige a `/`) |
 
 ---
 
 ### Aislamiento de Sucursales y Edición de Administradores:
-1. **Filtro en Cascada para Gerentes**: En `CotizacionesList.tsx` y `SucursalContext.tsx`, los usuarios con rol `ROLE_GERENTE` resuelven como empresa objetivo `user.empresaId`. Las sucursales disponibles en el filtro quedan estrictamente acotadas a las que pertenecen a su empresa (`s.empresaId === user.empresaId`), evitando mezcla con otras organizaciones.
+1. **Filtro en Cascada para Gerentes**: En `CotizacionesList.tsx` y `SucursalContext.tsx`, los usuarios con rol `ROLE_GERENTE_GENERAL` resuelven como empresa objetivo `user.empresaId`. Las sucursales disponibles en el filtro quedan estrictamente acotadas a las que pertenecen a su empresa (`s.empresaId === user.empresaId`).
 2. **Edición y Gestión de Administradores Globales (SaaS)**:
    - **Desde Catálogos (`CatalogosManagerView.tsx`)**: Los administradores disponen de un selector de alcance en la pestaña *Usuarios* para alternar entre "Usuarios Empresa", "🛡️ Administradores Globales SaaS" (`soloAdmins=true`) y "Todos los Usuarios". Los administradores creados o editados mantienen alcance global (`empresaId = null`, `sucursalId = null`).
    - **Desde la Barra Superior (`Navbar.tsx`)**: Cualquier usuario autenticado (incluyendo el SuperAdmin) puede presionar el botón **"⚙️ Mi Perfil"** para actualizar su nombre completo, correo, cargo o cambiar su contraseña directamente.
@@ -158,6 +159,14 @@ src/
      - La tabla de usuarios en Catálogos ([UsuariosTable.tsx](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/catalogos/components/UsuariosTable.tsx)) mediante el botón `🛡️`.
      - El módulo de RBAC ([RolesManagerView.tsx](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/rbac/RolesManagerView.tsx)) en la pestaña **👤 Permisos por Usuario**.
    - Gestionado mediante el componente [UserPermissionsModal.tsx](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/rbac/components/UserPermissionsModal.tsx) que discrimina visualmente: `[✨ Especial Otorgado]`, `[En rol base]` y `[🚫 Revocado]`, con opción de restablecer en un clic a los valores de fábrica del rol.
+4. **Gobernanza y Filtrado Centralizado de Alcance (`TenantScopeFilter` & `useTenantScopeFilter`)**:
+   - Resuelve de raíz el problema de duplicación de validaciones en cada vista u objeto.
+   - Cualquier módulo nuevo (ej. Historial, Facturación, Inventario) simplemente importa:
+     ```tsx
+     const { scope, setScope } = useTenantScopeFilter();
+     <TenantScopeFilter value={scope} onChange={setScope} />
+     ```
+   - El componente encapsula automáticamente todas las reglas de negocio: nunca muestra dropdowns a usuarios con sede fija (`isBranchLocked`), maneja la cascada de empresa a sucursal y sanitiza los IDs antes de enviarlos a las APIs.
 
 ---
 

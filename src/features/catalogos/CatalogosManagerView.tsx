@@ -18,7 +18,7 @@ import { UserPermissionsModal } from '../rbac/components/UserPermissionsModal';
 import { useAuth } from '../../context/AuthContext';
 
 export const CatalogosManagerView: React.FC = () => {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, canSelectSucursal, isBranchLocked } = useAuth();
   const { sucursales, sucursalActiva, empresaSeleccionada } = useSucursal();
 
   const targetEmpresaId = isAdmin ? empresaSeleccionada?.id : user?.empresaId;
@@ -33,7 +33,10 @@ export const CatalogosManagerView: React.FC = () => {
 
   // Filtros
   const [busqueda, setBusqueda] = useState('');
-  const [sucursalFiltro, setSucursalFiltro] = useState<number | 'TODAS'>('TODAS');
+  const [sucursalFiltro, setSucursalFiltro] = useState<number | 'TODAS'>(() => {
+    if (isBranchLocked && user?.sucursalId) return user.sucursalId;
+    return 'TODAS';
+  });
   const [cargando, setCargando] = useState(false);
 
   // Estados de Notificación Toast
@@ -80,7 +83,9 @@ export const CatalogosManagerView: React.FC = () => {
   const cargarDatos = async () => {
     try {
       setCargando(true);
-      const sId = sucursalFiltro === 'TODAS' ? undefined : sucursalFiltro;
+      const sId = isBranchLocked && user?.sucursalId
+        ? user.sucursalId
+        : (sucursalFiltro === 'TODAS' ? undefined : sucursalFiltro);
       const q = busqueda.trim() ? busqueda.trim() : undefined;
       const empId = targetEmpresaId;
 
@@ -423,21 +428,33 @@ export const CatalogosManagerView: React.FC = () => {
             Buscar
           </button>
 
-          {/* Filtro por Sucursal (para Clientes y Equipos) */}
+          {/* Filtro por Sucursal (para Clientes y Equipos) con Gobernanza Automática */}
           {tabActiva !== 'usuarios' && (
-            <div className="flex items-center gap-1.5 ml-2">
-              <span className="text-xs font-bold text-gray-500 hidden lg:inline">Sucursal:</span>
-              <select
-                value={sucursalFiltro}
-                onChange={(e) => setSucursalFiltro(e.target.value === 'TODAS' ? 'TODAS' : Number(e.target.value))}
-                className="px-2.5 py-2 text-xs border rounded-lg bg-gray-50 font-medium text-gray-700 focus:ring-2 focus:ring-[#1F3D3D]"
-              >
-                <option value="TODAS">🏢 Todas las Sucursales</option>
-                {sucursales.map(s => (
-                  <option key={s.id} value={s.id}>{s.nombre}</option>
-                ))}
-              </select>
-            </div>
+            canSelectSucursal ? (
+              <div className="flex items-center gap-1.5 ml-2">
+                <span className="text-xs font-bold text-gray-500 hidden lg:inline">Sucursal:</span>
+                <select
+                  value={sucursalFiltro}
+                  onChange={(e) => setSucursalFiltro(e.target.value === 'TODAS' ? 'TODAS' : Number(e.target.value))}
+                  className="px-2.5 py-2 text-xs border rounded-lg bg-gray-50 font-medium text-gray-700 focus:ring-2 focus:ring-[#1F3D3D]"
+                >
+                  <option value="TODAS">🏢 Todas las Sucursales</option>
+                  {sucursales.map(s => (
+                    <option key={s.id} value={s.id}>{s.nombre}</option>
+                  ))}
+                </select>
+              </div>
+            ) : isBranchLocked ? (
+              <div className="flex items-center gap-1.5 ml-2">
+                <span
+                  className="bg-gray-100 border border-gray-300 text-gray-700 text-xs px-2.5 py-2 rounded-lg font-semibold flex items-center gap-1 shadow-xs"
+                  title="Tu sede asignada (Filtro bloqueado por seguridad)"
+                >
+                  <span>🔒</span>
+                  <span className="max-w-[130px] truncate">{obtenerNombreSucursal(user?.sucursalId)}</span>
+                </span>
+              </div>
+            ) : null
           )}
 
           {/* Filtro Especial para SuperAdmin en pestaña Usuarios */}

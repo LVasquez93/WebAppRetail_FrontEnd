@@ -13,7 +13,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProfile,
 }) => {
   const location = useLocation();
-  const { user, isAdmin, isAdminOrGerente } = useAuth();
+  const { user, isAdmin, canSelectSucursal } = useAuth();
   const {
     empresas,
     empresaSeleccionada,
@@ -175,8 +175,8 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         )}
 
-        {/* 2. SELECTOR DE SUCURSAL (Interactivo para Admin y Gerente) */}
-        {isAdminOrGerente ? (
+        {/* 2. SELECTOR DE SUCURSAL (Interactivo para Admin y Gerente General) */}
+        {canSelectSucursal ? (
           sucursales.length > 0 ? (
             <div className="relative" ref={sucursalRef}>
               <button
