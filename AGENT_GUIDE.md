@@ -248,3 +248,45 @@ Para añadir un nuevo módulo al frontend:
    - Agregar la ruta en `App.tsx` envuelta en `<ProtectedRoute allowedRoles={['ROLE_ADMIN', ...]}>`.
    - Agregar el enlace en `Navbar.tsx` con visibilidad condicional según el rol.
 5. **Verificación de Calidad**: Ejecutar siempre `npm run build` antes de realizar commit para asegurar **cero errores de TypeScript**.
+
+---
+
+## 9. Principios de Diseño Obligatorios para Nuevos Modelos y Desarrolladores
+
+Para mantener la calidad, consistencia visual y accesibilidad del sistema ERP, todo nuevo componente o vista generado por agentes IA o desarrolladores **DEBE** cumplir obligatoriamente con estos 4 principios:
+
+### 1. Uso Obligatorio de Skeletons (Prevención de Cumulative Layout Shift - CLS)
+- **Regla**: Prohibido usar spinners solitarios centrados en páginas completas o tablas que provoquen saltos abruptos de maquetación (CLS) al resolver la carga.
+- **Implementación**:
+  - Para tablas de datos, utilizar el componente reutilizable [`TableSkeleton.tsx`](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/components/common/skeletons/TableSkeleton.tsx) (`src/components/common/skeletons/TableSkeleton.tsx`).
+  - Para tarjetas o vistas de formulario complejas, estructurar un esqueleto equivalente con `animate-pulse` que replique la forma del encabezado, pestañas y bloques de entrada.
+  - Incluir siempre semántica accesible en el contenedor de carga: `role="status"` y `<span className="sr-only">Cargando información...</span>`.
+
+### 2. Cumplimiento de la Ley de Hick (Prevención de Sobrecarga Cognitiva)
+- **Jerarquía Estricta de Acciones (CTAs)**: Cada vista debe contar con un único botón de Llamado a la Acción Primario destacado (ej. `bg-brand-primary` / `hover:bg-brand-primary-hover`). Las acciones secundarias deben representarse en outline neutro (`bg-white border-gray-300`) o botones terciarios discretos.
+- **Divulgación Progresiva**: No sobrecargar al operador con más de 7±2 campos o botones simultáneos. Los parámetros secundarios u opcionales (como notas comerciales predeterminadas o configuraciones avanzadas) deben presentarse agrupados, plegados o con valores por defecto inteligentes.
+
+### 3. Uso de Design Tokens Semánticos (Tailwind CSS v4 `@theme`)
+- **Regla**: Prohibido quemar valores hexadecimales arbitrarios (`#1F3D3D`, `#C88D4B`, `#6394EC`, etc.) directamente en las clases de utilidades.
+- **Tokens Oficiales en `src/index.css`**:
+  - `--color-brand-primary: #1F3D3D;` -> Usar `bg-brand-primary`, `text-brand-primary`, `border-brand-primary`, `focus:ring-brand-primary`.
+  - `--color-brand-primary-hover: #2a5252;` -> Usar `hover:bg-brand-primary-hover`.
+  - `--color-brand-accent: #C88D4B;` -> Acento dorado para fondos oscuros (`text-brand-accent`, `border-brand-accent`).
+  - `--color-brand-accent-text: #966023;` -> **Acento para texto sobre fondos blancos/claros** (cumple ratio WCAG AA 4.6:1).
+  - Tokens de cotización: `--color-quote-header` (`#6394EC`), `--color-quote-cell` (`#ACD7E6`), `--color-quote-total` (`#FFE3E7`), `--color-quote-maroon` (`#800000`).
+
+### 4. Estándares de Accesibilidad W3C (WCAG 2.1/2.2 Nivel AA)
+- **Contraste de Color (Criterio 1.4.3)**:
+  - Ratio de contraste mínimo de 4.5:1 para texto normal y 3:1 para texto grande.
+  - El dorado corporativo `#C88D4B` (ratio 2.85:1 sobre blanco) **NO** debe usarse como color de texto en fondos claros; usar siempre `text-brand-accent-text` (#966023, ratio 4.6:1).
+- **Semántica de Tablas (Criterio 1.3.1)**:
+  - Toda tabla de datos debe tener un `aria-label` descriptivo (ej. `aria-label="Catálogo de Clientes"`).
+  - Todos los encabezados `<th>` deben incluir explícitamente `scope="col"`.
+- **Nombres Accesibles en Acciones (Criterio 4.1.2)**:
+  - Prohibido renderizar botones que solo contengan iconos (`✏️`, `🗑️`, `🛡️`, `✕`, etc.) sin texto visible o atributo `aria-label` accesible.
+  - Todos los botones interactivos deben contar con estilos de foco accesibles por teclado: `focus-visible:ring-2 focus-visible:ring-offset-2 outline-none`.
+- **Patrón Modal Accesible (WAI-ARIA Dialog)**:
+  - Todo modal debe incluir `role="dialog"` (o `role="alertdialog"` para confirmaciones destructivas), `aria-modal="true"` y `aria-labelledby="id-del-titulo"`.
+  - Todo modal debe escuchar activamente la tecla <kbd>Escape</kbd> mediante un hook `useEffect` para cerrarse de inmediato.
+- **Asociación Explícita Label-Input (Criterio 1.3.1 / 3.3.2)**:
+  - Todo `<label>` debe incluir `htmlFor="campo-id"` apuntando al `id="campo-id"` del `<input>`, `<select>` o `<textarea>`. No dejar controles huérfanos.
