@@ -149,17 +149,24 @@ src/
 ---
 
 ### Aislamiento de Sucursales y Edición de Administradores:
-1. **Filtro en Cascada para Gerentes**: En `CotizacionesList.tsx` y `SucursalContext.tsx`, los usuarios con rol `ROLE_GERENTE_GENERAL` resuelven como empresa objetivo `user.empresaId`. Las sucursales disponibles en el filtro quedan estrictamente acotadas a las que pertenecen a su empresa (`s.empresaId === user.empresaId`).
-2. **Edición y Gestión de Administradores Globales (SaaS)**:
+1. **Gobernanza de Alcance por Rol (`AuthContext.tsx` & `TenantScopeFilter.tsx`)**:
+   - **`ROLE_ADMIN` (SuperAdmin SaaS)**: `canSelectEmpresa = true`, `canSelectSucursal = true`, `isBranchLocked = false`. Dispone de selectores interactivos globales tanto para empresa como para sucursal.
+   - **`ROLE_GERENTE_GENERAL` (Dueño de Empresa)**: `canSelectEmpresa = false` (empresa fijada a su organización con badge informativo), `canSelectSucursal = true`, `isBranchLocked = false`. Dispone de selector interactivo de sucursales acotado a todas las sedes de su empresa, permitiéndole cotizar, filtrar historiales y supervisar catálogos de cualquier sede.
+   - **`ROLE_GERENTE_SUCURSAL` (Gerente de Sede)**: `canSelectEmpresa = false`, `canSelectSucursal = false`, `isBranchLocked = true`. Su contexto y filtros quedan estrictamente bloqueados con candado 🔒 a su sucursal asignada.
+   - **`ROLE_VENTAS` (Vendedor)**: `canSelectEmpresa = false`, `canSelectSucursal = false`, `isBranchLocked = true`. Bloqueado estrictamente a su sucursal asignada.
+2. **Aislamiento en Configuración de Sedes ([SucursalesView.tsx](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/sucursales/SucursalesView.tsx))**:
+   - Para `ROLE_ADMIN` y `ROLE_GERENTE_GENERAL`: Visualizan pestañas con todas las sucursales de la empresa, pueden crear nuevas sedes (`➕ Nueva Sucursal`) y eliminar sedes existentes.
+   - Para `ROLE_GERENTE_SUCURSAL`: Se ocultan las pestañas de otras sucursales (no tiene visibilidad de sedes ajenas), se ocultan los botones de crear y eliminar sucursales, y se despliega un panel exclusivo con su sede asignada.
+3. **Edición y Gestión de Administradores Globales (SaaS)**:
    - **Desde Catálogos (`CatalogosManagerView.tsx`)**: Los administradores disponen de un selector de alcance en la pestaña *Usuarios* para alternar entre "Usuarios Empresa", "🛡️ Administradores Globales SaaS" (`soloAdmins=true`) y "Todos los Usuarios". Los administradores creados o editados mantienen alcance global (`empresaId = null`, `sucursalId = null`).
-   - **Desde la Barra Superior (`Navbar.tsx`)**: Cualquier usuario autenticado (incluyendo el SuperAdmin) puede presionar el botón **"⚙️ Mi Perfil"** para actualizar su nombre completo, correo, cargo o cambiar su contraseña directamente.
-3. **Permisos Granulares por Colaborador (Sobrescritura RBAC)**:
+   - **Desde el Menú de Usuario / Perfil**: Cualquier usuario autenticado puede presionar el botón de perfil para actualizar su información personal y credenciales de forma segura.
+4. **Permisos Granulares por Colaborador (Sobrescritura RBAC)**:
    - Permite a administradores otorgar facultades adicionales (ej. permitir que un vendedor o supervisor cree clientes, importe productos o registre usuarios ventas) o revocar permisos específicos a un usuario en particular, sin alterar la plantilla global del rol.
    - Accesible directamente desde:
      - La tabla de usuarios en Catálogos ([UsuariosTable.tsx](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/catalogos/components/UsuariosTable.tsx)) mediante el botón `🛡️`.
      - El módulo de RBAC ([RolesManagerView.tsx](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/rbac/RolesManagerView.tsx)) en la pestaña **👤 Permisos por Usuario**.
    - Gestionado mediante el componente [UserPermissionsModal.tsx](file:///c:/Users/luizi/OneDrive/Escritorio/WebAppRetail_FrontEnd/src/features/rbac/components/UserPermissionsModal.tsx) que discrimina visualmente: `[✨ Especial Otorgado]`, `[En rol base]` y `[🚫 Revocado]`, con opción de restablecer en un clic a los valores de fábrica del rol.
-4. **Gobernanza y Filtrado Centralizado de Alcance (`TenantScopeFilter` & `useTenantScopeFilter`)**:
+5. **Gobernanza y Filtrado Centralizado de Alcance (`TenantScopeFilter` & `useTenantScopeFilter`)**:
    - Resuelve de raíz el problema de duplicación de validaciones en cada vista u objeto.
    - Cualquier módulo nuevo (ej. Historial, Facturación, Inventario) simplemente importa:
      ```tsx

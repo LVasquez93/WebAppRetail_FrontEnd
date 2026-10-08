@@ -126,9 +126,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const rol = user?.rol || '';
+  const cargo = (user?.cargo || '').toUpperCase();
   const isAdmin = rol === 'ROLE_ADMIN' || rol === 'ADMIN';
-  const isGerenteGeneral = rol === 'ROLE_GERENTE_GENERAL' || rol === 'GERENTE_GENERAL';
-  const isGerenteSucursal = rol === 'ROLE_GERENTE_SUCURSAL' || rol === 'GERENTE_SUCURSAL';
+
+  const isGerenteSucursal = rol === 'ROLE_GERENTE_SUCURSAL' || rol === 'GERENTE_SUCURSAL'
+    || (rol === 'ROLE_GERENTE' && (cargo.includes('SUCURSAL') || cargo.includes('SEDE')));
+
+  const isGerenteGeneral = rol === 'ROLE_GERENTE_GENERAL' || rol === 'GERENTE_GENERAL'
+    || (rol === 'ROLE_GERENTE' && !isGerenteSucursal)
+    || cargo.includes('GENERAL') || cargo.includes('DUEÑO') || cargo.includes('DUENO');
+
   const isGerente = isGerenteGeneral || isGerenteSucursal || rol === 'ROLE_GERENTE' || rol === 'GERENTE';
   const isVentas = rol === 'ROLE_VENTAS' || rol === 'VENTAS';
   const isAdminOrGerente = isAdmin || isGerente;

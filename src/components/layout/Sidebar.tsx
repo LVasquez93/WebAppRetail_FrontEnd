@@ -18,7 +18,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenProfile,
 }) => {
   const location = useLocation();
-  const { user, isAdmin, isAdminOrGerente, logout } = useAuth();
+  const { user, isAdmin, isAdminOrGerente, isGerenteGeneral, isGerenteSucursal, logout } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -190,13 +190,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <span className="bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[9px] px-1.5 py-0.2 rounded-full font-bold">
                         SuperAdmin SaaS
                       </span>
-                    ) : user?.rol === 'ROLE_GERENTE_GENERAL' ? (
+                    ) : isGerenteGeneral ? (
                       <span className="bg-teal-500/20 text-teal-300 border border-teal-400/30 text-[9px] px-1.5 py-0.2 rounded-full font-bold truncate block">
-                        👑 Gerente General • {user.empresaNombre || 'Empresa'}
+                        👑 Gerente General • {user?.empresaNombre || 'Empresa'}
                       </span>
-                    ) : user?.rol === 'ROLE_GERENTE_SUCURSAL' ? (
+                    ) : isGerenteSucursal ? (
                       <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 text-[9px] px-1.5 py-0.2 rounded-full font-bold truncate block">
-                        🏬 Gerente Sede • {user.sucursalNombre || 'Sucursal'}
+                        🏬 Gerente Sede • {user?.sucursalNombre || 'Sucursal'}
                       </span>
                     ) : user?.empresaNombre ? (
                       <span className="bg-teal-900/60 text-teal-200 border border-teal-500/30 text-[9px] px-1.5 py-0.2 rounded-full font-medium truncate block max-w-full">

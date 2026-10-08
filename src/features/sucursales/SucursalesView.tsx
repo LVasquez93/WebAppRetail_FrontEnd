@@ -5,15 +5,39 @@ import { sucursalesApi } from '../../api/sucursalesApi';
 import { Sucursal } from '../catalogos/types/catalogos.types';
 
 export const SucursalesView: React.FC = () => {
-  const { user, isAdmin, isGerenteGeneral, isGerenteSucursal, hasPermission } = useAuth();
+  const { user, isAdmin, isGerenteGeneral, isGerenteSucursal } = useAuth();
   const { sucursales, sucursalActiva, setSucursalActiva, recargarSucursales, cargandoSucursales, empresaSeleccionada } = useSucursal();
-  const [selectedBranchId, setSelectedBranchId] = useState<number | null>(sucursalActiva?.id || null);
+
+  // Permisos: SuperAdmin y Gerente General tienen control total sobre todas las sedes de la empresa.
+  // El Gerente de Sucursal tiene control exclusivo y delimitado sobre su sede asignada.
+  const puedeGestionarTodas = isAdmin || isGerenteGeneral;
+  const sucursalesVisibles = puedeGestionarTodas
+    ? sucursales
+    : sucursales.filter(s => s.id === user?.sucursalId);
+
+  const puedeCrear = puedeGestionarTodas;
+  const puedeEliminar = puedeGestionarTodas;
+
+  const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Sucursal>>({});
   const [guardando, setGuardando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
 
-  const puedeCrear = isAdmin || isGerenteGeneral || hasPermission('SUCURSALES_CREAR');
-  const puedeEliminar = isAdmin || isGerenteGeneral || hasPermission('SUCURSALES_ELIMINAR');
+  // Determinar la sucursal activa garantizando aislamiento para Gerente de Sucursal
+  const activeBranchId: number | null = puedeGestionarTodas
+    ? (selectedBranchId ?? sucursalActiva?.id ?? sucursalesVisibles[0]?.id ?? null)
+    : (user?.sucursalId ?? sucursalesVisibles[0]?.id ?? null);
+
+  const branchSeleccionada = (activeBranchId ? sucursalesVisibles.find(s => s.id === activeBranchId) : null) || sucursalesVisibles[0] || null;
+
+  // Sincronizar sucursal fijada si es Gerente de Sucursal
+  useEffect(() => {
+    if (!puedeGestionarTodas && user?.sucursalId) {
+      if (selectedBranchId !== user.sucursalId) {
+        setSelectedBranchId(user.sucursalId);
+      }
+    }
+  }, [puedeGestionarTodas, user?.sucursalId, selectedBranchId]);
 
   // Estado para modal de nueva sucursal
   const [modalNuevaSucursal, setModalNuevaSucursal] = useState(false);
@@ -40,10 +64,6 @@ export const SucursalesView: React.FC = () => {
     mostrarIvaDesglosado: true,
     activo: true,
   });
-
-  // Determinar la sucursal activa garantizando que nunca sea nula si existen sucursales
-  const activeBranchId = selectedBranchId ?? sucursalActiva?.id ?? sucursales[0]?.id ?? null;
-  const branchSeleccionada = (activeBranchId ? sucursales.find(s => s.id === activeBranchId) : null) || sucursales[0] || null;
 
   // Sincronizar formulario cada vez que cambie la sucursal seleccionada
   useEffect(() => {
@@ -245,42 +265,48 @@ export const SucursalesView: React.FC = () => {
       )}
 
       {/* Vista cuando no hay sucursales registradas */}
-      {sucursales.length === 0 ? (
+      {sucursalesVisibles.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-md p-10 text-center border border-teal-100 space-y-4 animate-fadeIn">
           <div className="w-16 h-16 bg-teal-50 text-[#1F3D3D] rounded-full flex items-center justify-center text-3xl mx-auto shadow-inner">
             🏢
           </div>
           <h2 className="text-xl font-bold text-gray-800">
-            Aún no hay sucursales registradas para tu empresa
+            {puedeGestionarTodas
+              ? 'Aún no hay sucursales registradas para tu empresa'
+              : 'No se encontró tu sucursal asignada'}
           </h2>
           <p className="text-sm text-gray-600 max-w-md mx-auto">
-            Para comenzar a emitir cotizaciones y personalizar membretes fiscales, registra la primera sucursal (Casa Matriz) de tu empresa.
+            {puedeGestionarTodas
+              ? 'Para comenzar a emitir cotizaciones y personalizar membretes fiscales, registra la primera sucursal (Casa Matriz) de tu empresa.'
+              : 'Tu usuario no tiene una sede activa asignada o no se pudo cargar. Por favor contacta al Gerente General de tu empresa.'}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => {
-                setNuevaSucursal({
-                  codigo: 'SUC_01',
-                  nombre: (user?.empresaNombre || 'Casa Matriz') + ' (Principal)',
-                  razonSocial: user?.empresaNombre || '',
-                  nombreComercial: user?.empresaNombre || '',
-                  prefijoCotizacion: 'COT1',
-                  direccion: '',
-                  telefono: '',
-                  correo: '',
-                  formaPagoPredeterminada: 'Contado contra entrega / Transferencia Bancaria',
-                  notaPredeterminada: '** IMPORTANTE ** Precios sujetos a inventario.',
-                  nombreFirmante: user?.nombreCompleto || 'Gerente General',
-                  cargoFirmante: user?.cargo || 'Gerente General',
-                  activo: true,
-                });
-                setModalNuevaSucursal(true);
-              }}
-              className="bg-[#1F3D3D] hover:bg-[#2a5252] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md flex items-center gap-2 cursor-pointer transition-all"
-            >
-              <span>➕</span> Registrar Primera Sucursal
-            </button>
+            {puedeCrear && (
+              <button
+                type="button"
+                onClick={() => {
+                  setNuevaSucursal({
+                    codigo: 'SUC_01',
+                    nombre: (user?.empresaNombre || 'Casa Matriz') + ' (Principal)',
+                    razonSocial: user?.empresaNombre || '',
+                    nombreComercial: user?.empresaNombre || '',
+                    prefijoCotizacion: 'COT1',
+                    direccion: '',
+                    telefono: '',
+                    correo: '',
+                    formaPagoPredeterminada: 'Contado contra entrega / Transferencia Bancaria',
+                    notaPredeterminada: '** IMPORTANTE ** Precios sujetos a inventario.',
+                    nombreFirmante: user?.nombreCompleto || 'Gerente General',
+                    cargoFirmante: user?.cargo || 'Gerente General',
+                    activo: true,
+                  });
+                  setModalNuevaSucursal(true);
+                }}
+                className="bg-[#1F3D3D] hover:bg-[#2a5252] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md flex items-center gap-2 cursor-pointer transition-all"
+              >
+                <span>➕</span> Registrar Primera Sucursal
+              </button>
+            )}
             <button
               type="button"
               onClick={() => recargarSucursales()}
@@ -292,26 +318,44 @@ export const SucursalesView: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* Pestañas de Sucursales */}
-          <div className="flex gap-2 border-b border-gray-200 overflow-x-auto pb-1">
-        {sucursales.map(s => {
-          const isSelected = s.id === branchSeleccionada?.id;
-          return (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => setSelectedBranchId(s.id)}
-              className={`px-5 py-2.5 rounded-t-lg text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
-                isSelected
-                  ? 'bg-white text-[#1F3D3D] border-t-2 border-l border-r border-[#1F3D3D] shadow-sm -mb-px'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-transparent'
-              }`}
-            >
-              🏢 {s.nombre}
-            </button>
-          );
-        })}
-      </div>
+          {/* Selector de Sucursal: Pestañas para Admin/Gerente General, o Badge informativo para Gerente de Sede */}
+          {puedeGestionarTodas ? (
+            <div className="flex gap-2 border-b border-gray-200 overflow-x-auto pb-1">
+              {sucursalesVisibles.map(s => {
+                const isSelected = s.id === branchSeleccionada?.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setSelectedBranchId(s.id)}
+                    className={`px-5 py-2.5 rounded-t-lg text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                      isSelected
+                        ? 'bg-white text-[#1F3D3D] border-t-2 border-l border-r border-[#1F3D3D] shadow-sm -mb-px'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border-transparent'
+                    }`}
+                  >
+                    🏢 {s.nombre}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 flex items-center justify-between shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#1F3D3D] text-white flex items-center justify-center text-xl shadow-xs">
+                  🏬
+                </div>
+                <div>
+                  <div className="text-[11px] text-teal-700 font-bold uppercase tracking-wider">Tu Sede Asignada</div>
+                  <div className="text-base font-extrabold text-[#1F3D3D]">{branchSeleccionada?.nombre || 'Sede Asignada'}</div>
+                  <p className="text-xs text-gray-500 mt-0.5">Estás editando los membretes y parámetros de tu sucursal.</p>
+                </div>
+              </div>
+              <span className="bg-teal-100 text-teal-800 text-xs px-3 py-1 rounded-full font-mono font-bold">
+                {branchSeleccionada?.codigo || 'SUC'}
+              </span>
+            </div>
+          )}
 
       {/* Formulario de Configuración de la Sucursal Seleccionada */}
       {branchSeleccionada && (
