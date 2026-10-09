@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { CotizacionFormData, ItemCotizacionInput } from '../types/cotizacion.types';
@@ -51,12 +51,22 @@ export const CotizacionForm = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [clientesSugeridos, setClientesSugeridos] = useState<Cliente[]>([]);
   const [mostrarDropdownClientes, setMostrarDropdownClientes] = useState(false);
+  const [totalClientesEnBd, setTotalClientesEnBd] = useState<number>(0);
+  const [buscandoCliente, setBuscandoCliente] = useState(false);
 
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
 
   const [equiposCatalogo, setEquiposCatalogo] = useState<Equipo[]>([]);
   const [equiposFiltrados, setEquiposFiltrados] = useState<{ [itemIndex: number]: Equipo[] }>({});
   const [busquedaActivaItem, setBusquedaActivaItem] = useState<number | null>(null);
+  const [totalEquiposEnBd, setTotalEquiposEnBd] = useState<number>(0);
+  const [buscandoEquipoItem, setBuscandoEquipoItem] = useState<{ [itemIndex: number]: boolean }>({});
+
+  // Refs para debouncing y evitar race conditions en búsquedas directas
+  const clienteSearchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clienteSearchQueryRef = useRef<string>('');
+  const itemSearchTimeoutsRef = useRef<{ [itemIndex: number]: ReturnType<typeof setTimeout> }>({});
+  const itemSearchQueriesRef = useRef<{ [itemIndex: number]: string }>({});
 
   // Estados para modal de confirmación y guardado de equipos nuevos
   const [equiposNuevosDetectados, setEquiposNuevosDetectados] = useState<ItemCotizacionInput[]>([]);
@@ -77,9 +87,10 @@ export const CotizacionForm = () => {
     const sucursalId = sucursalActiva?.id;
     const targetEmpresaId = sucursalActiva?.empresaId || user?.empresaId;
 
-    clientesApi.listarOBuscar(undefined, sucursalId, targetEmpresaId, 0, 100).then(data => {
+    clientesApi.listarOBuscar(undefined, sucursalId, targetEmpresaId, 0, 30).then(data => {
       setClientes(data.content);
       setClientesSugeridos(data.content);
+      setTotalClientesEnBd(data.totalElements);
     }).catch(console.error);
 
     if (user?.username) {
@@ -92,8 +103,9 @@ export const CotizacionForm = () => {
       }).catch(console.error);
     }
 
-    equiposApi.listarOBuscar(undefined, sucursalId, targetEmpresaId, 0, 100).then(data => {
+    equiposApi.listarOBuscar(undefined, sucursalId, targetEmpresaId, 0, 30).then(data => {
       setEquiposCatalogo(data.content);
+      setTotalEquiposEnBd(data.totalElements);
     }).catch(console.error);
 
     // Ajustar condiciones comerciales y notas por defecto según la sucursal activa
@@ -107,22 +119,53 @@ export const CotizacionForm = () => {
     }
   }, [sucursalActiva, user?.username, user?.empresaId, isAdminOrGerente, setValue]);
 
-  // Autocompletado de Clientes
+  // Limpieza de timeouts activos al desmontar componente
+  useEffect(() => {
+    return () => {
+      if (clienteSearchTimeoutRef.current) {
+        clearTimeout(clienteSearchTimeoutRef.current);
+      }
+      Object.values(itemSearchTimeoutsRef.current).forEach(t => clearTimeout(t));
+    };
+  }, []);
+
+  // Autocompletado de Clientes con Búsqueda Directa en Servidor (Option A)
   const handleBuscarCliente = (texto: string) => {
     setValue('razonSocialCliente', texto);
+    clienteSearchQueryRef.current = texto;
+
+    if (clienteSearchTimeoutRef.current) {
+      clearTimeout(clienteSearchTimeoutRef.current);
+    }
+
     if (!texto.trim()) {
       setClientesSugeridos(clientes);
       setMostrarDropdownClientes(false);
+      setBuscandoCliente(false);
       return;
     }
-    const query = texto.toLowerCase();
-    const filtrados = clientes.filter(c =>
-      c.razonSocial.toLowerCase().includes(query) ||
-      (c.nombreComercial && c.nombreComercial.toLowerCase().includes(query)) ||
-      (c.contactoPrincipal && c.contactoPrincipal.toLowerCase().includes(query))
-    );
-    setClientesSugeridos(filtrados);
+
+    setBuscandoCliente(true);
     setMostrarDropdownClientes(true);
+
+    clienteSearchTimeoutRef.current = setTimeout(async () => {
+      const currentQuery = texto.trim();
+      const sucursalId = sucursalActiva?.id;
+      const targetEmpresaId = sucursalActiva?.empresaId || user?.empresaId;
+
+      try {
+        const data = await clientesApi.listarOBuscar(currentQuery, sucursalId, targetEmpresaId, 0, 30);
+        if (clienteSearchQueryRef.current.trim() === currentQuery) {
+          setClientesSugeridos(data.content);
+        }
+      } catch (err) {
+        console.error('Error buscando clientes en servidor:', err);
+      } finally {
+        if (clienteSearchQueryRef.current.trim() === currentQuery) {
+          setBuscandoCliente(false);
+        }
+      }
+    }, 250);
   };
 
   const handleSelectCliente = (cliente: Cliente) => {
@@ -136,27 +179,43 @@ export const CotizacionForm = () => {
     setMostrarDropdownClientes(false);
   };
 
-  // Autocompletado de Equipos
+  // Autocompletado de Equipos con Búsqueda Directa en Servidor (Option A)
   const handleBuscarEquipoEnCatalogo = (index: number, texto: string) => {
     setValue(`items.${index}.descripcionEquipo`, texto);
     setValue(`items.${index}.equipoId`, undefined);
+    itemSearchQueriesRef.current[index] = texto;
+
+    if (itemSearchTimeoutsRef.current[index]) {
+      clearTimeout(itemSearchTimeoutsRef.current[index]);
+    }
 
     if (!texto.trim()) {
-      setEquiposFiltrados(prev => ({ ...prev, [index]: [] }));
-      setBusquedaActivaItem(null);
+      setEquiposFiltrados(prev => ({ ...prev, [index]: equiposCatalogo }));
+      setBuscandoEquipoItem(prev => ({ ...prev, [index]: false }));
       return;
     }
 
-    const query = texto.toLowerCase();
-    const filtrados = equiposCatalogo.filter(e =>
-      e.descripcion.toLowerCase().includes(query) ||
-      (e.partNumber && e.partNumber.toLowerCase().includes(query)) ||
-      (e.caracteristicas && e.caracteristicas.toLowerCase().includes(query)) ||
-      (e.categoria && e.categoria.toLowerCase().includes(query))
-    );
-
-    setEquiposFiltrados(prev => ({ ...prev, [index]: filtrados }));
     setBusquedaActivaItem(index);
+    setBuscandoEquipoItem(prev => ({ ...prev, [index]: true }));
+
+    itemSearchTimeoutsRef.current[index] = setTimeout(async () => {
+      const currentQuery = texto.trim();
+      const sucursalId = sucursalActiva?.id;
+      const targetEmpresaId = sucursalActiva?.empresaId || user?.empresaId;
+
+      try {
+        const data = await equiposApi.listarOBuscar(currentQuery, sucursalId, targetEmpresaId, 0, 30);
+        if (itemSearchQueriesRef.current[index]?.trim() === currentQuery) {
+          setEquiposFiltrados(prev => ({ ...prev, [index]: data.content }));
+        }
+      } catch (err) {
+        console.error('Error buscando equipos en servidor:', err);
+      } finally {
+        if (itemSearchQueriesRef.current[index]?.trim() === currentQuery) {
+          setBuscandoEquipoItem(prev => ({ ...prev, [index]: false }));
+        }
+      }
+    }, 250);
   };
 
   const handleSeleccionarEquipoDeCatalogo = (index: number, equipo: Equipo) => {
@@ -331,8 +390,9 @@ export const CotizacionForm = () => {
           categoria: 'General'
         });
       }
-      const actualizados = await equiposApi.listarOBuscar(undefined, sucursalActiva?.id, targetEmpresaId, 0, 100);
+      const actualizados = await equiposApi.listarOBuscar(undefined, sucursalActiva?.id, targetEmpresaId, 0, 30);
       setEquiposCatalogo(actualizados.content);
+      setTotalEquiposEnBd(actualizados.totalElements);
     } catch (err) {
       console.error('Error guardando equipos nuevos en el catálogo:', err);
     } finally {
@@ -400,6 +460,8 @@ export const CotizacionForm = () => {
             handleBuscarCliente={handleBuscarCliente}
             handleSelectCliente={handleSelectCliente}
             inputClasses={inputClasses}
+            totalClientesEnBd={totalClientesEnBd}
+            buscandoCliente={buscandoCliente}
           />
 
           <CotizacionMetadataCard
@@ -434,6 +496,8 @@ export const CotizacionForm = () => {
           inputClasses={inputClasses}
           simboloMoneda={simboloMoneda}
           porcentajeIva={porcentajeIvaSucursal}
+          totalEquiposEnBd={totalEquiposEnBd}
+          buscandoEquipoItem={buscandoEquipoItem}
         />
 
         {/* Botones de Acción */}

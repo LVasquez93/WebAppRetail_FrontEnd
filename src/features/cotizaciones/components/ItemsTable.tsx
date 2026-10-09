@@ -23,6 +23,8 @@ interface ItemsTableProps {
   inputClasses: string;
   simboloMoneda?: string;
   porcentajeIva?: number;
+  totalEquiposEnBd?: number;
+  buscandoEquipoItem?: { [itemIndex: number]: boolean };
 }
 
 export const ItemsTable: React.FC<ItemsTableProps> = ({
@@ -44,7 +46,11 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
   inputClasses,
   simboloMoneda = '$',
   porcentajeIva = 13,
+  totalEquiposEnBd,
+  buscandoEquipoItem = {},
 }) => {
+  const totalEquiposMostrar = totalEquiposEnBd !== undefined ? totalEquiposEnBd : equiposCatalogo.length;
+
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Items Section */}
@@ -52,9 +58,9 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 border-b pb-2">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-gray-800">Equipos y Servicios Cotizados</h2>
-            {equiposCatalogo.length > 0 && (
+            {totalEquiposMostrar > 0 && (
               <span className="text-xs text-blue-800 font-semibold bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                {equiposCatalogo.length} equipos en BD
+                {totalEquiposMostrar} equipos en BD
               </span>
             )}
           </div>
@@ -96,7 +102,8 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                   const item = watchItems?.[index] || {};
                   const totalLinea = Math.round((Number(item.cantidad || 0) * Number(item.precioUnitario || 0)) * 100) / 100;
                   const sugerenciasItem = equiposFiltrados[index] || [];
-                  const mostrarSugerencias = busquedaActivaItem === index && sugerenciasItem.length > 0;
+                  const buscandoEsteItem = buscandoEquipoItem[index] || false;
+                  const mostrarSugerencias = busquedaActivaItem === index;
 
                   return (
                     <tr key={field.id} className="hover:bg-gray-50 flex flex-col md:table-row border-b md:border-b-0 mb-4 md:mb-0 bg-white">
@@ -115,7 +122,11 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                               placeholder="Escribe el equipo o busca en el catálogo..."
                               onChange={(e) => handleBuscarEquipoEnCatalogo(index, e.target.value)}
                               onFocus={() => {
-                                if (sugerenciasItem.length > 0) setBusquedaActivaItem(index);
+                                const currentText = watchItems?.[index]?.descripcionEquipo || '';
+                                if (!currentText.trim() && equiposCatalogo.length > 0 && (!equiposFiltrados[index] || equiposFiltrados[index].length === 0)) {
+                                  handleBuscarEquipoEnCatalogo(index, '');
+                                }
+                                setBusquedaActivaItem(index);
                               }}
                             />
 
@@ -123,42 +134,60 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                             {mostrarSugerencias && (
                               <div className="absolute z-30 left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white border border-blue-200 rounded-lg shadow-xl divide-y divide-gray-100">
                                 <div className="p-1.5 bg-blue-50 text-[11px] font-semibold text-blue-700 flex justify-between items-center">
-                                  <span>Catálogo de Equipos ({sugerenciasItem.length})</span>
+                                  <span>
+                                    {buscandoEsteItem ? (
+                                      <span className="flex items-center gap-1.5 text-blue-700 font-medium">
+                                        <span className="inline-block animate-spin">⌛</span> Buscando en catálogo...
+                                      </span>
+                                    ) : (
+                                      `Catálogo de Equipos (${sugerenciasItem.length})`
+                                    )}
+                                  </span>
                                   <button
                                     type="button"
                                     onClick={() => setBusquedaActivaItem(null)}
-                                    className="text-gray-400 hover:text-gray-600 font-bold px-1"
+                                    aria-label="Cerrar sugerencias"
+                                    className="text-gray-400 hover:text-gray-600 font-bold px-1 cursor-pointer"
                                   >
                                     ✕
                                   </button>
                                 </div>
-                                {sugerenciasItem.map(eq => (
-                                  <button
-                                    key={eq.id}
-                                    type="button"
-                                    onClick={() => handleSeleccionarEquipoDeCatalogo(index, eq)}
-                                    className="w-full text-left p-2 hover:bg-blue-50 transition-colors flex flex-col group cursor-pointer"
-                                  >
-                                    <div className="flex justify-between items-start gap-1">
-                                      <span className="font-semibold text-xs text-gray-900 group-hover:text-blue-900">
-                                        {eq.descripcion}
-                                      </span>
-                                      {eq.precioReferencial !== undefined && (
-                                        <span className="font-mono text-emerald-700 font-bold text-xs shrink-0">
-                                          ${Number(eq.precioReferencial).toFixed(2)}
+                                {sugerenciasItem.length > 0 ? (
+                                  sugerenciasItem.map(eq => (
+                                    <button
+                                      key={eq.id}
+                                      type="button"
+                                      onClick={() => handleSeleccionarEquipoDeCatalogo(index, eq)}
+                                      className="w-full text-left p-2 hover:bg-blue-50 transition-colors flex flex-col group cursor-pointer"
+                                    >
+                                      <div className="flex justify-between items-start gap-1">
+                                        <span className="font-semibold text-xs text-gray-900 group-hover:text-blue-900">
+                                          {eq.descripcion}
                                         </span>
-                                      )}
-                                    </div>
-                                    <div className="flex items-center gap-2 mt-0.5 text-[11px] text-gray-500">
-                                      {eq.partNumber && (
-                                        <span className="font-mono bg-gray-100 px-1 rounded text-[10px] text-blue-700 font-medium">
-                                          P/N: {eq.partNumber}
-                                        </span>
-                                      )}
-                                      {eq.categoria && <span>Cat: {eq.categoria}</span>}
-                                    </div>
-                                  </button>
-                                ))}
+                                        {eq.precioReferencial !== undefined && (
+                                          <span className="font-mono text-emerald-700 font-bold text-xs shrink-0">
+                                            ${Number(eq.precioReferencial).toFixed(2)}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-gray-500">
+                                        {eq.partNumber && (
+                                          <span className="font-mono bg-gray-100 px-1 rounded text-[10px] text-blue-700 font-medium">
+                                            P/N: {eq.partNumber}
+                                          </span>
+                                        )}
+                                        {eq.categoria && <span>Cat: {eq.categoria}</span>}
+                                        {eq.tiempoEntregaPredeterminado && (
+                                          <span>Entrega: {eq.tiempoEntregaPredeterminado}</span>
+                                        )}
+                                      </div>
+                                    </button>
+                                  ))
+                                ) : !buscandoEsteItem ? (
+                                  <div className="p-3 text-center text-xs text-gray-500">
+                                    No se encontraron equipos en el catálogo
+                                  </div>
+                                ) : null}
                               </div>
                             )}
                           </div>

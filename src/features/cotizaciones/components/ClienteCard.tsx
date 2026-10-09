@@ -13,6 +13,8 @@ interface ClienteCardProps {
   handleBuscarCliente: (texto: string) => void;
   handleSelectCliente: (cliente: Cliente) => void;
   inputClasses: string;
+  totalClientesEnBd?: number;
+  buscandoCliente?: boolean;
 }
 
 export const ClienteCard: React.FC<ClienteCardProps> = ({
@@ -25,14 +27,18 @@ export const ClienteCard: React.FC<ClienteCardProps> = ({
   handleBuscarCliente,
   handleSelectCliente,
   inputClasses,
+  totalClientesEnBd,
+  buscandoCliente = false,
 }) => {
+  const totalMostrar = totalClientesEnBd !== undefined ? totalClientesEnBd : clientes.length;
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
       <div className="flex justify-between items-center mb-4 border-b pb-2">
         <h2 className="text-xl font-bold text-gray-800">Datos del Cliente</h2>
-        {clientes.length > 0 && (
+        {totalMostrar > 0 && (
           <span className="text-xs text-emerald-800 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-            {clientes.length} clientes en BD
+            {totalMostrar} clientes en BD
           </span>
         )}
       </div>
@@ -72,10 +78,18 @@ export const ClienteCard: React.FC<ClienteCardProps> = ({
           {errors.razonSocialCliente && <span className="text-red-500 text-xs">Requerido</span>}
 
           {/* Menú Flotante de Sugerencias de Clientes */}
-          {mostrarDropdownClientes && clientesSugeridos.length > 0 && (
+          {mostrarDropdownClientes && (
             <div className="absolute z-30 left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-xl divide-y divide-gray-100">
               <div className="p-1.5 bg-gray-50 text-[11px] font-semibold text-gray-500 flex justify-between items-center">
-                <span>Coincidencias encontradas ({clientesSugeridos.length})</span>
+                <span>
+                  {buscandoCliente ? (
+                    <span className="flex items-center gap-1.5 text-emerald-700 font-medium">
+                      <span className="inline-block animate-spin">⌛</span> Buscando en base de datos...
+                    </span>
+                  ) : (
+                    `Coincidencias encontradas (${clientesSugeridos.length})`
+                  )}
+                </span>
                 <button
                   type="button"
                   onClick={() => setMostrarDropdownClientes(false)}
@@ -86,26 +100,32 @@ export const ClienteCard: React.FC<ClienteCardProps> = ({
                 </button>
               </div>
 
-              {clientesSugeridos.map(cli => (
-                <button
-                  key={cli.id}
-                  type="button"
-                  onClick={() => handleSelectCliente(cli)}
-                  className="w-full text-left p-2.5 hover:bg-emerald-50 transition-colors flex flex-col group cursor-pointer"
-                >
-                  <span className="font-semibold text-xs text-gray-900 group-hover:text-emerald-900">
-                    {cli.razonSocial}
-                  </span>
-                  <div className="flex items-center gap-2 mt-0.5 text-[11px] text-gray-600">
-                    {cli.nombreComercial && (
-                      <span className="text-brand-accent-text font-semibold font-sans">★ {cli.nombreComercial}</span>
-                    )}
-                    {cli.contactoPrincipal && (
-                      <span className="text-gray-500">Contacto: {cli.contactoPrincipal}</span>
-                    )}
-                  </div>
-                </button>
-              ))}
+              {clientesSugeridos.length > 0 ? (
+                clientesSugeridos.map(cli => (
+                  <button
+                    key={cli.id}
+                    type="button"
+                    onClick={() => handleSelectCliente(cli)}
+                    className="w-full text-left p-2.5 hover:bg-emerald-50 transition-colors flex flex-col group cursor-pointer"
+                  >
+                    <span className="font-semibold text-xs text-gray-900 group-hover:text-emerald-900">
+                      {cli.razonSocial}
+                    </span>
+                    <div className="flex items-center gap-2 mt-0.5 text-[11px] text-gray-600">
+                      {cli.nombreComercial && (
+                        <span className="text-brand-accent-text font-semibold font-sans">★ {cli.nombreComercial}</span>
+                      )}
+                      {cli.contactoPrincipal && (
+                        <span className="text-gray-500">Contacto: {cli.contactoPrincipal}</span>
+                      )}
+                    </div>
+                  </button>
+                ))
+              ) : !buscandoCliente ? (
+                <div className="p-3 text-center text-xs text-gray-500">
+                  No se encontraron coincidencias en la base de datos
+                </div>
+              ) : null}
             </div>
           )}
         </div>
